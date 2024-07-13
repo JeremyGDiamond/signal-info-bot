@@ -2,5 +2,16 @@
     "admin" : "",
     "noteToSelfMode" : true,
     "testDmId" : "",
-    "testGrId" : ""
+    "testGrId" : "",
+    "groups" : {
+        "exGroup1" : {
+            "grId" : "",
+            "welcomeMessage" : "#bot test Welcome message",
+            "helpMessage" : "#bot test help message",
+            "commands" : {
+                "test" : "#bot test command from config"
+            }
+        }
+    }
+
 }

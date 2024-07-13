@@ -1,6 +1,7 @@
 import subprocess
 import json
 import time
+import pprint
 
 # signal class
 class SignalObj:
@@ -22,8 +23,9 @@ class SignalObj:
         subprocess.run(["signal-cli", "send", "--note-to-self", "-m", message])
 
     def receive(self):
-        output = subprocess.run(["signal-cli", "receive"], capture_output=True)
-        # print(output)
+        output = subprocess.run(["signal-cli", "receive"], 
+        capture_output=True, text=True)
+        print(output)
         return (output)
     
     def getGroupInfo(self):
@@ -38,7 +40,7 @@ class SignalObj:
             # print(self.config)
 
     def adminAlert(self, adminAlertMessage):
-        self.receive()
+        # self.receive()
         if self.config["noteToSelfMode"]:
             self.sendNTS(adminAlertMessage)
         else:
@@ -54,8 +56,12 @@ class SignalObj:
     def welcome():
         pass
 
-    def parseReceive():
-        pass
+    def parseReceive(self):
+        output = self.receive()
+        directMessages = []
+        groupJoins = []
+        # pp = pprint.PrettyPrinter()
+        print(output)
 
     def sanitizeMessage():
         pass

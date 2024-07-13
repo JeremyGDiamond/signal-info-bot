@@ -2,7 +2,7 @@ import subprocess
 import json
 import time
 
-signal = signalpy.SignalObj()
+signal = signalpy.SignalObj("config.json")
 
 def main():
     print("Bot alive")
@@ -21,7 +21,8 @@ def main():
 
 
     while True:
-        signal.receive()
+        # signal.receive()
+        signal.parseReceive()
         print("receieve run")
 
 

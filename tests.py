@@ -3,21 +3,24 @@ import subprocess
 import json
 import time
 
-signal = signalpy.SignalObj()
+signal = signalpy.SignalObj("testConfig.json")
 
 # test signal funcs
 def testSend():
-    receive()
-    send(config["testDmId"], "#bot hardcoded test send function")
+    # signal.receive()
+    signal.send(signal.config["testDmId"], "#bot hardcoded test send function")
 
 def testSendGroup():
-    receive()
-    sendGroup(config["testGrId"], "#bot hardcoded test group send function")
+    # signal.receive()
+    signal.sendGroup(signal.config["testGrId"], "#bot hardcoded test group send function")
 
 # test bot behaviors
 def testAdminAlert():
-    signal.receive()
+    # signal.receive()
     signal.adminAlert("#bot test admin alert")
+
+def testParseReceive():
+    signal.parseReceive()
 
 
 
@@ -28,6 +31,7 @@ def main():
     # testSend()
     # testSendGroup()
     testAdminAlert()
+    testParseReceive()
     
     
     # todo
