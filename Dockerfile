@@ -1,5 +1,11 @@
 FROM ubuntu:22.04
 
+WORKDIR /code
+
+COPY ./*.py /code
+
+COPY ./*.json /code
+
 RUN apt update
 
 RUN apt install curl -y
@@ -12,14 +18,16 @@ RUN apt update
 
 RUN apt-get install signal-cli-native -y
 
-CMD ["ls"]
+RUN apt-get install qrencode -y
+
+CMD ["qrencode", "--help"]
 
 # todo 
-# - copy files into container 
+# X copy files into container
+# - persistant login 
 # - setup script
 #   - checks if logged in
 #   - if not links device
-#   - stores it persitantly
 # - run bot
 # - tests endpoint in make
 # - tests runs tests
