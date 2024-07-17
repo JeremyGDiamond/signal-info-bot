@@ -4,20 +4,25 @@ Welcome and info bot for signal groups based on [signal cli](https://github.com/
 
 ## TODO
 - [ ] MVP
-  - [ ] python bot
-    - [ ] welcome command
-    - [ ] help command
-    - [ ] update command
+  - [ ] parse commands
+  - [ ] welcome message & command
+  - [ ] default command (shows the default group name to members)
   - [ ] pulls command list and resps from json config file
+  - [ ] help command 
+    - [ ] basic help
+    - [ ] group admin help
+    - [ ] bot admin help
+  - [ ] update command
   - [ ] admin, logging and alerts
   - [ ] dockerize
+  - [ ] backup command and changes group chat
   - [ ] how to and readme
 - [ ] everything else
- - [ ] secure remote config
- - [ ] multi groups
- - [ ] arm dist
- - [ ] primary device mode and linked device mode
- 
+  - [ ] secure remote config
+  - [ ] multi groups
+  - [ ] cron
+  - [ ] group admins mass send
+  
 ## Command Convention
 All commands must be one word all lower case. The bot will have a default group if you want to use a differant group follow the command with the group name. update is more complicated see below for details.
 

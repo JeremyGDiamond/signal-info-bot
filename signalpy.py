@@ -11,16 +11,25 @@ class SignalObj:
         self.configFileName = configFileName
 
         self.readconfig()
+        self.helps = {}
+        self.genHelps()
 
+    # needed becuse of shell injections
+    def sanitizeMessage(message):
+        
+        # TODO`HOLY SHIT DO THIS BEFORE GOING PUBLIC !!!!!`
+
+        return message
+    
     def send(self, id, message):
-        subprocess.run(["signal-cli", "send", id, "-m", message])
+        subprocess.run(["signal-cli", "send", id, "-m", sanitizeMessage(message)])
         
 
     def sendGroup(self, id, message):
-        subprocess.run(["signal-cli", "send", "-g", id, "-m", message])
+        subprocess.run(["signal-cli", "send", "-g", id, "-m", sanitizeMessage(message)])
         
     def sendNTS(self, message):
-        subprocess.run(["signal-cli", "send", "--note-to-self", "-m", message])
+        subprocess.run(["signal-cli", "send", "--note-to-self", "-m", sanitizeMessage(message)])
 
     def receive(self):
         output = subprocess.run(["signal-cli", "receive"], 
@@ -34,7 +43,7 @@ class SignalObj:
 
     # bot behaviors
     def readconfig(self):
-        # todo not working cus of scope i don't care enough right now
+       
         with open(self.configFileName) as configFile:
             self.config = json.load(configFile)
             # print(self.config)
@@ -47,21 +56,61 @@ class SignalObj:
             self.send(self.config["testDmId"], adminAlertMessage)
 
 
-    def getGroupMembers():
-        pass
+    def getGroupMembers(self, groupId):
+        output = getGroupInfo(groupId)
+        members = {}
+        # todo some stuff
 
-    def verfiyPrivs():
-        pass
+        return members
+    
+    def getGroupAdmins():
+        output = getGroupInfo(groupId)
+        admins = {}
+        # some stuff
 
-    def welcome():
-        pass
+        return admins
+
+    def welcome(self, userId, groupId):
+        members = getGroupMembers(groupId)
+
+        if userId in members:
+            send(userId, config[groupId][welcomeMessage])
+
+    def genHelps(self)
+
+        baseMessage ''' To use this bot send a command follwoed by a group name
+
+                        example: help group i'm in
+
+                        If no group is given the default group is used
+        
+                        Command List -
+                        help: show this message for the group
+                        welcome: show welcome message again
+                        defualt: show the default group name
+                        '''
+        for key,value in self.config["groups"]:
+            grHelp = baseMessage + "\n" + value["grName"] + " Commands - "
+            for commKey,commValue in value["commands"]:
+                grHelp + "\n" + commKey + ": " + commValue
+            
+            self.helps[key] = grHelp
+            print(self.helps[key])
+
+        
 
     def parseReceive(self):
         output = self.receive()
         directMessages = []
+        
+        #list of touples command and groups
+        commandList = []
         groupJoins = []
         # pp = pprint.PrettyPrinter()
         print(output)
 
-    def sanitizeMessage():
-        pass
+        # todo dms to command list
+
+        return commandList, groupJoins
+
+    

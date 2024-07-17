@@ -30,8 +30,8 @@ def main():
 
     # testSend()
     # testSendGroup()
-    testAdminAlert()
-    testParseReceive()
+    # testAdminAlert()
+    # testParseReceive()
     
     
     # todo
