@@ -6,6 +6,7 @@
     "groups" : {
         "exGroup1" : {
             "grId" : "",
+            "grName": "",
             "welcomeMessage" : "#bot test Welcome message",
             "helpMessage" : "#bot test help message",
             "commands" : {
