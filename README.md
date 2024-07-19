@@ -8,7 +8,7 @@ Welcome and info bot for signal groups based on [signal cli](https://github.com/
   - [ ] welcome message & command
   - [ ] default command (shows the default group name to members)
   - [ ] pulls command list and resps from json config file
-  - [ ] help command 
+  - [ ] help command
     - [ ] basic help
     - [ ] group admin help
     - [ ] bot admin help
@@ -22,7 +22,12 @@ Welcome and info bot for signal groups based on [signal cli](https://github.com/
   - [ ] multi groups
   - [ ] cron
   - [ ] group admins mass send
-  
+
+## Setup
+### Local
+  - Install signal-cli: https://packaging.gitlab.io/signal-cli/installation/standalone/
+  - Install qrencode: `sudo apt install qrencode`
+
 ## Command Convention
 All commands must be one word all lower case. The bot will have a default group if you want to use a differant group follow the command with the group name. update is more complicated see below for details.
 
