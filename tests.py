@@ -27,6 +27,7 @@ def testParseReceive():
 def main():
     
     print("tests")
+    # print(signal.helps)
 
     # testSend()
     # testSendGroup()

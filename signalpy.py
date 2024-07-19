@@ -76,29 +76,34 @@ class SignalObj:
         if userId in members:
             send(userId, config[groupId][welcomeMessage])
 
-    def genHelps(self)
+    def genHelps(self):
 
-        baseMessage ''' To use this bot send a command follwoed by a group name
-
-                        example: help group i'm in
-
-                        If no group is given the default group is used
+        baseMessage = "\
+To use this bot send a command follwoed by a group name\n\
+\n\
+example: help group I'm in\n\
+\n\
+If no group is given the default group is used\n\
+\n\
+Command List\n\
+help: show this message for the group\n\
+welcome: show welcome message again\n\
+defualt: show the default group name"
         
-                        Command List -
-                        help: show this message for the group
-                        welcome: show welcome message again
-                        defualt: show the default group name
-                        '''
-        for key,value in self.config["groups"]:
-            grHelp = baseMessage + "\n" + value["grName"] + " Commands - "
-            for commKey,commValue in value["commands"]:
-                grHelp + "\n" + commKey + ": " + commValue
+        groups = self.config["groups"]
+        
+        for key, value in groups.items():
             
-            self.helps[key] = grHelp
-            print(self.helps[key])
-
+            grHelp = baseMessage + "\n" + value["grName"] + " Commands - "
+            for commKey,commValue in value["commands"].items():
+                grHelp = grHelp + "\n" + commKey + ": " + commValue[1]
+            
+            self.helps[key] = grHelp       
         
 
+    def sendHelp(self, userId, groupId):
+        pass
+    
     def parseReceive(self):
         output = self.receive()
         directMessages = []
