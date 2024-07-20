@@ -22,6 +22,9 @@ def testAdminAlert():
 def testParseReceive():
     signal.parseReceive()
 
+def testGetGroupInfo():
+    signal.getGroupInfo()
+
 
 
 def main():
@@ -33,6 +36,7 @@ def main():
     # testSendGroup()
     # testAdminAlert()
     # testParseReceive()
+    testGetGroupInfo()
     
     
     # todo

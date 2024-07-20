@@ -3,6 +3,18 @@ import json
 import time
 import pprint
 
+baseHelpMessage = "\
+To use this bot send a command follwoed by a group name\n\
+\n\
+example: help group I'm in\n\
+\n\
+If no group is given the default group is used\n\
+\n\
+Command List\n\
+help: show this message for the group\n\
+welcome: show welcome message again\n\
+defualt: show the default group name"
+
 # signal class
 class SignalObj:
 
@@ -32,13 +44,18 @@ class SignalObj:
         subprocess.run(["signal-cli", "send", "--note-to-self", "-m", sanitizeMessage(message)])
 
     def receive(self):
-        output = subprocess.run(["signal-cli", "receive"], 
+        output = subprocess.run(["signal-cli", "listGroups", "-d"], 
         capture_output=True, text=True)
-        print(output)
+        # print(output)
         return (output)
     
     def getGroupInfo(self):
-        pass
+        # TODO add refersh message to get inactive groups
+
+        output = subprocess.run(["signal-cli", ""], 
+        capture_output=True, text=True)
+        print(output)
+        return (output)
 
 
     # bot behaviors
@@ -70,6 +87,7 @@ class SignalObj:
 
         return admins
 
+    
     def welcome(self, userId, groupId):
         members = getGroupMembers(groupId)
 
@@ -78,23 +96,11 @@ class SignalObj:
 
     def genHelps(self):
 
-        baseMessage = "\
-To use this bot send a command follwoed by a group name\n\
-\n\
-example: help group I'm in\n\
-\n\
-If no group is given the default group is used\n\
-\n\
-Command List\n\
-help: show this message for the group\n\
-welcome: show welcome message again\n\
-defualt: show the default group name"
-        
         groups = self.config["groups"]
         
         for key, value in groups.items():
             
-            grHelp = baseMessage + "\n" + value["grName"] + " Commands - "
+            grHelp = baseHelpMessage + "\n" + value["grName"] + " Commands - "
             for commKey,commValue in value["commands"].items():
                 grHelp = grHelp + "\n" + commKey + ": " + commValue[1]
             
@@ -102,7 +108,11 @@ defualt: show the default group name"
         
 
     def sendHelp(self, userId, groupId):
-        pass
+        members = getGroupMembers(groupId)
+
+        if userId in members:
+            send(userId, config[groupId][welcomeMessage])
+
     
     def parseReceive(self):
         output = self.receive()
