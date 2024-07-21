@@ -1,10 +1,11 @@
 import subprocess
 import json
+import re
 import time
 import pprint
 
 baseHelpMessage = "\
-To use this bot send a command follwoed by a group name\n\
+To use this bot send a command followed by a group name\n\
 \n\
 example: help group I'm in\n\
 \n\
@@ -13,7 +14,8 @@ If no group is given the default group is used\n\
 Command List\n\
 help: show this message for the group\n\
 welcome: show welcome message again\n\
-defualt: show the default group name"
+default: show the default group name"
+
 
 # signal class
 class SignalObj:
@@ -27,24 +29,25 @@ class SignalObj:
         self.genHelps()
 
     # needed becuse of shell injections
-    def sanitizeMessage(message):
+    def sanitizeMessage(self, message):
         
         # TODO`HOLY SHIT DO THIS BEFORE GOING PUBLIC !!!!!`
 
         return message
     
     def send(self, id, message):
-        subprocess.run(["signal-cli", "send", id, "-m", sanitizeMessage(message)])
+        subprocess.run(["signal-cli", "send", id, "-m", self.sanitizeMessage(message)])
         
 
     def sendGroup(self, id, message):
-        subprocess.run(["signal-cli", "send", "-g", id, "-m", sanitizeMessage(message)])
+        subprocess.run(["signal-cli", "send", "-g", id, "-m", self.sanitizeMessage(message)])
         
     def sendNTS(self, message):
-        subprocess.run(["signal-cli", "send", "--note-to-self", "-m", sanitizeMessage(message)])
+        subprocess.run(["signal-cli", "send", "--note-to-self", "-m", self.sanitizeMessage(message)])
 
     def receive(self):
         output = subprocess.run(["signal-cli", "listGroups", "-d"], 
+        # output = subprocess.run(["signal-cli", "receive"], # TODO
         capture_output=True, text=True)
         # print(output)
         return (output)
@@ -113,11 +116,51 @@ class SignalObj:
         if userId in members:
             send(userId, config[groupId][welcomeMessage])
 
-    
+    def processMsg(self, msg: str):
+        if msg == "": return
+        if "Group info:\n" in msg: # Skip group messages
+            print("skipping group message")
+            return None
+
+        try:
+            senderId = re.search(r' .+ ([0-9a-z\-\+]+) \(device: ', msg)[1]
+        except TypeError:
+            print(msg)
+            print("Error parsing message, could not find sender ID")
+            return None
+
+        # TODO: messages containing these words are skipped
+        ignoreTypes = ["Group call update", "Contacts", "Sticker", "Reaction"]
+        for type in ignoreTypes:
+            print(f"Received {type} from {senderId}, skipping")
+            return None
+        cannotHandleTypes = ["Attachment", "Contacts", "Sticker", "Story reply"] # Story reply seems to be picture, location, audio?
+        for type in cannotHandleTypes:
+            if f"{type}:\n" in msg:
+                pass
+                # self.send(senderId, "Sorry, I cannot handle this message type") # TODO
+            return None
+
+        if "Body: " not in msg:
+            return None
+
+        # TODO: multi-line messages (see ReceiveMesageHandler.printDataMessage)
+        body = self.sanitizeMessage(msg.split("Body: ")[1].split("\n")[0])
+        print(f"received message from {senderId}: {body}")
+
+        # TODO: actually handle message :)
+
     def parseReceive(self):
         output = self.receive()
+        # TODO: uncomment when ready to receive
+        # stdout = self.receive().stdout
+        # if stdout.strip() == "":
+        #     return
+        # for msg in stdout.split("Envelope from:"):
+        #     self.processMsg(msg)
+
         directMessages = []
-        
+
         #list of touples command and groups
         commandList = []
         groupJoins = []
@@ -127,5 +170,3 @@ class SignalObj:
         # todo dms to command list
 
         return commandList, groupJoins
-
-    
