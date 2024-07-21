@@ -131,15 +131,15 @@ class SignalObj:
 
         # TODO: messages containing these words are skipped
         ignoreTypes = ["Group call update", "Contacts", "Sticker", "Reaction"]
-        for type in ignoreTypes:
-            print(f"Received {type} from {senderId}, skipping")
-            return None
+        for ignoreType in ignoreTypes:
+            if f"{ignoreType}:\n" in msg:
+                print(f"Received {ignoreType} from {senderId}, skipping")
+                return None
         cannotHandleTypes = ["Attachment", "Contacts", "Sticker", "Story reply"] # Story reply seems to be picture, location, audio?
-        for type in cannotHandleTypes:
-            if f"{type}:\n" in msg:
-                pass
+        for cannotHandleType in cannotHandleTypes:
+            if f"{cannotHandleType}:\n" in msg:
                 # self.send(senderId, "Sorry, I cannot handle this message type") # TODO
-            return None
+                return None
 
         if "Body: " not in msg:
             return None
