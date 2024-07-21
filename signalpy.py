@@ -130,7 +130,7 @@ class SignalObj:
             return None
 
         # TODO: messages containing these words are skipped
-        ignoreTypes = ["Group call update", "Contacts", "Sticker", "Reaction"]
+        ignoreTypes = ["Group call update", "Reaction"]
         for ignoreType in ignoreTypes:
             if f"{ignoreType}:\n" in msg:
                 print(f"Received {ignoreType} from {senderId}, skipping")
