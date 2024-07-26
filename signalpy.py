@@ -35,12 +35,12 @@ class SignalObj:
 
         return message
     
-    def send(self, id, message):
-        subprocess.run(["signal-cli", "send", id, "-m", self.sanitizeMessage(message)])
+    def send(self, userId, message):
+        subprocess.run(["signal-cli", "send", userId, "-m", self.sanitizeMessage(message)])
         
 
-    def sendGroup(self, id, message):
-        subprocess.run(["signal-cli", "send", "-g", id, "-m", self.sanitizeMessage(message)])
+    def sendGroup(self, groupId, message):
+        subprocess.run(["signal-cli", "send", "-g", groupId, "-m", self.sanitizeMessage(message)])
         
     def sendNTS(self, message):
         subprocess.run(["signal-cli", "send", "--note-to-self", "-m", self.sanitizeMessage(message)])
@@ -60,12 +60,12 @@ class SignalObj:
         print(output)
         return (output)
 
-
     # bot behaviors
     def readconfig(self):
        
         with open(self.configFileName) as configFile:
             self.config = json.load(configFile)
+            # TODO: check validity of config: default, for each group id, help and welcome. Group names lower case.
             # print(self.config)
 
     def adminAlert(self, adminAlertMessage):
@@ -74,7 +74,6 @@ class SignalObj:
             self.sendNTS(adminAlertMessage)
         else:
             self.send(self.config["testDmId"], adminAlertMessage)
-
 
     def getGroupMembers(self, groupId):
         output = getGroupInfo(groupId)
@@ -90,7 +89,9 @@ class SignalObj:
 
         return admins
 
-    
+    def error(self, userId, msg):
+        self.send(userId, f"ERROR: {msg}")
+
     def welcome(self, userId, groupId):
         members = getGroupMembers(groupId)
 
@@ -101,13 +102,13 @@ class SignalObj:
 
         groups = self.config["groups"]
         
-        for key, value in groups.items():
+        for grName, value in groups.items():
             
-            grHelp = baseHelpMessage + "\n" + value["grName"] + " Commands - "
+            grHelp = baseHelpMessage + "\n" + grName + " Commands - "
             for commKey,commValue in value["commands"].items():
                 grHelp = grHelp + "\n" + commKey + ": " + commValue[1]
             
-            self.helps[key] = grHelp       
+            self.helps[grName] = grHelp
         
 
     def sendHelp(self, userId, groupId):
@@ -115,6 +116,32 @@ class SignalObj:
 
         if userId in members:
             send(userId, config[groupId][welcomeMessage])
+
+    def handleCmd(self, userId, msg):
+        msg = msg.lower().strip().split()  # TODO: save group names in lower case in config
+        if len(msg) == 1:
+            groupName = self.config["default"]
+            groupId = self.config["groups"][groupName]["grId"]
+        else:
+            groupName = " ".join(msg[1:])
+            try:
+                groupId = self.config["groups"][groupName]["grId"]
+            except KeyError:
+                self.error(userId, f"cannot find group with name '{groupName}'.")
+                return
+
+        if userId not in self.getGroupMembers(groupId):
+            self.error(userId, f"cannot find group with name '{groupName}'.")
+            return
+
+        cmd = msg[0]
+        if cmd == "help":
+            self.helps[groupId]
+        elif cmd not in self.config["groups"][groupName]["commands"]:
+            self.error(userId, f"do not know command '{cmd}' for group '{groupName}'. Try help to get all possible commands.")
+        else:
+            res = self.config["groups"][groupName]["commands"][cmd]
+            self.send(userId, res)
 
     def processMsg(self, msg: str):
         if msg == "": return
@@ -138,7 +165,7 @@ class SignalObj:
         cannotHandleTypes = ["Attachment", "Contacts", "Sticker", "Story reply"] # Story reply seems to be picture, location, audio?
         for cannotHandleType in cannotHandleTypes:
             if f"{cannotHandleType}:\n" in msg:
-                # self.send(senderId, "Sorry, I cannot handle this message type") # TODO
+                # self.error(senderId, "I cannot handle this message type") # TODO uncomment
                 return None
 
         if "Body: " not in msg:
@@ -148,11 +175,11 @@ class SignalObj:
         body = self.sanitizeMessage(msg.split("Body: ")[1].split("\n")[0])
         print(f"received message from {senderId}: {body}")
 
-        # TODO: actually handle message :)
+        self.handleCmd(senderId, body)
 
     def parseReceive(self):
         output = self.receive()
-        # TODO: uncomment when ready to receive
+        # TODO: uncomment when ready to receive (comment above)
         # stdout = self.receive().stdout
         # if stdout.strip() == "":
         #     return
