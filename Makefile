@@ -2,7 +2,7 @@
 	build
 
 run:build
-	docker run signal-info-bot  	
+	docker run -v .:/code signal-info-bot  	
 
 test:myTests
 	docker run signal-info-bot:testing

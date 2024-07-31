@@ -1,3 +1,4 @@
+import signalpy
 import subprocess
 import json
 import time
@@ -20,10 +21,10 @@ def main():
     # - include example config file
 
 
-    while True:
-        # signal.receive()
-        signal.parseReceive()
-        print("receieve run")
+    # while True:
+    #     # signal.receive()
+    #     signal.parseReceive()
+    #     print("receieve run")
 
 
         
