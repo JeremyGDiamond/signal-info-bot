@@ -65,7 +65,28 @@ class SignalObj:
        
         with open(self.configFileName) as configFile:
             self.config = json.load(configFile)
-            # TODO: check validity of config: default, for each group id, help and welcome. Group names lower case.
+
+            # Check validity of config.
+            if "default" not in self.config.keys():
+                print("WARNING: no default set")
+            groups = self.config["groups"]
+            invalid_groups = []
+            for group in groups:
+                if "grId" not in groups[group].keys() or groups[group]["grId"].strip() == "":
+                    print(f"WARNING: no group ID set for group {group}, removing group")
+                    invalid_groups.append(group)
+                    continue
+                if "welcomeMessage" not in groups[group].keys():
+                    groups[group]["welcomeMessage"] = ""
+                    print(f"WARNING: no Welcome Message set for group {group}")
+                if "commands" not in groups[group].keys() or len(groups[group]["commands"]) == 0:
+                    groups[group]["commands"] = {}
+                    print(f"WARNING: no commands set for group {group}")
+
+            # Remove invalid groups
+            for invalid_group in invalid_groups:
+                del groups[invalid_group]
+
             # print(self.config)
 
     def adminAlert(self, adminAlertMessage):
@@ -93,10 +114,10 @@ class SignalObj:
         self.send(userId, f"ERROR: {msg}")
 
     def welcome(self, userId, groupId):
-        members = getGroupMembers(groupId)
+        members = self.getGroupMembers(groupId)
 
         if userId in members:
-            send(userId, config[groupId][welcomeMessage])
+            self.send(userId, self.config[groupId]["welcomeMessage"])
 
     def genHelps(self):
 
@@ -141,7 +162,7 @@ class SignalObj:
             self.error(userId, f"do not know command '{cmd}' for group '{groupName}'. Try help to get all possible commands.")
         else:
             res = self.config["groups"][groupName]["commands"][cmd]
-            self.send(userId, res)
+            self.send(userId, self.sanitizeMessage(res))
 
     def processMsg(self, msg: str):
         if msg == "": return
