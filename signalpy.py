@@ -6,6 +6,7 @@ import pprint
 
 ACTIVE_REFRESH = 60 * 5  # Max sec between active refresh (with interaction)
 PASSIVE_REFRESH = 60 * 60  # Max sec between passive refresh (without any interaction)
+assert ACTIVE_REFRESH < PASSIVE_REFRESH
 
 baseHelpMessage = "\
 To use this bot send a command followed by a group name\n\
@@ -110,18 +111,20 @@ class SignalObj:
             self.send(self.config["testDmId"], adminAlertMessage)
 
     def getGroupMembers(self, groupId):
-        output = getGroupInfo(groupId)
-        members = {}
-        # todo some stuff
+        self.genGroups()
 
-        return members
-    
-    def getGroupAdmins():
-        output = getGroupInfo(groupId)
-        admins = {}
-        # some stuff
+        try:
+            return self.groups[groupId]["members"]
+        except KeyError:
+            return None
 
-        return admins
+    def getGroupAdmins(self, groupId):
+        self.genGroups()
+
+        try:
+            return self.groups[groupId]["admins"]
+        except KeyError:
+            return None
 
     def error(self, userId, msg):
         self.send(userId, f"ERROR: {msg}")
@@ -145,6 +148,10 @@ class SignalObj:
             self.helps[grName] = grHelp
 
     def genGroups(self):
+        # Return if not time for active refresh.
+        if time.time() - self.groupsTimeStamp < ACTIVE_REFRESH:
+            return
+
         res = self.listGroups().stdout
         res_groups = res.split("Id: ")
 
@@ -156,7 +163,7 @@ class SignalObj:
             if re_res is None:
                 print(f"WARNING: could not parse group {res_group}")
                 continue
-            id, name, _, active, members, admins = re_res.groups()
+            groupId, name, _, active, members, admins = re_res.groups()
 
             # Skip inactive groups
             if active == "false": continue
@@ -166,18 +173,17 @@ class SignalObj:
             members = members[1:-1].split(", ")
             admins = admins[1:-1].split(", ")
 
-            if id in self.groups.keys():
+            if groupId in self.groups.keys():
                 # Send welcome message to new members
-                new_members = set(members) - set(self.groups[id]["members"])
+                new_members = set(members) - set(self.groups[groupId]["members"])
                 for new_member in new_members:
-                    # TODO: send welcome message to new_member
-                    pass
+                    self.welcome(new_member, groupId)
 
-                self.groups[id]["name"] = name
-                self.groups[id]["members"] = members
-                self.groups[id]["admins"] = admins
+                self.groups[groupId]["name"] = name
+                self.groups[groupId]["members"] = members
+                self.groups[groupId]["admins"] = admins
             else:
-                self.groups[id] = {
+                self.groups[groupId] = {
                     "name": name,
                     "members": members,
                     "admins": admins,
@@ -202,7 +208,8 @@ class SignalObj:
                 self.error(userId, f"cannot find group with name '{groupName}'.")
                 return
 
-        if userId not in self.getGroupMembers(groupId):
+        members = self.getGroupMembers(groupId)
+        if members is None or userId not in members:
             self.error(userId, f"cannot find group with name '{groupName}'.")
             return
 
