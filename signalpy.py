@@ -4,6 +4,9 @@ import re
 import time
 import pprint
 
+ACTIVE_REFRESH = 60 * 5  # Max sec between active refresh (with interaction)
+PASSIVE_REFRESH = 60 * 60  # Max sec between passive refresh (without any interaction)
+
 baseHelpMessage = "\
 To use this bot send a command followed by a group name\n\
 \n\
@@ -28,6 +31,10 @@ class SignalObj:
         self.helps = {}
         self.genHelps()
 
+        self.groups = {} # <GroupID>: { name: str, members: list[str], admins: list[str] }
+        self.groupsTimeStamp = time.time()
+        self.genGroups()
+
     # needed becuse of shell injections
     def sanitizeMessage(self, message):
         
@@ -38,7 +45,6 @@ class SignalObj:
     def send(self, userId, message):
         subprocess.run(["signal-cli", "send", userId, "-m", self.sanitizeMessage(message)])
         
-
     def sendGroup(self, groupId, message):
         subprocess.run(["signal-cli", "send", "-g", groupId, "-m", self.sanitizeMessage(message)])
         
@@ -46,12 +52,19 @@ class SignalObj:
         subprocess.run(["signal-cli", "send", "--note-to-self", "-m", self.sanitizeMessage(message)])
 
     def receive(self):
-        output = subprocess.run(["signal-cli", "listGroups", "-d"], 
+        output = self.listGroups()
         # output = subprocess.run(["signal-cli", "receive"], # TODO
-        capture_output=True, text=True)
+        # capture_output=True, text=True) # TODO
         # print(output)
         return (output)
-    
+
+    def listGroups(self):
+        output = subprocess.run(["signal-cli", "listGroups", "-d"],
+        capture_output=True, text=True)
+        self.groupsTimeStamp = time.time()
+
+        return (output)
+
     def getGroupInfo(self):
         # TODO add refersh message to get inactive groups
 
@@ -73,7 +86,7 @@ class SignalObj:
             invalid_groups = []
             for group in groups:
                 if "grId" not in groups[group].keys() or groups[group]["grId"].strip() == "":
-                    print(f"WARNING: no group ID set for group {group}, removing group")
+                    print(f"WARNING: no ID set for group {group}, removing group")
                     invalid_groups.append(group)
                     continue
                 if "welcomeMessage" not in groups[group].keys():
@@ -121,16 +134,54 @@ class SignalObj:
 
     def genHelps(self):
 
-        groups = self.config["groups"]
+        configGroups = self.config["groups"]
         
-        for grName, value in groups.items():
+        for grName, value in configGroups.items():
             
             grHelp = baseHelpMessage + "\n" + grName + " Commands - "
             for commKey,commValue in value["commands"].items():
                 grHelp = grHelp + "\n" + commKey + ": " + commValue[1]
             
             self.helps[grName] = grHelp
-        
+
+    def genGroups(self):
+        res = self.listGroups().stdout
+        res_groups = res.split("Id: ")
+
+        group_re = r"(.+) Name: (.+) Description: (.|\n)* Active: (true|false) .+ Members: (\[.*\]) Pending members: .+ Admins: (\[.*\]) Banned: "
+        for res_group in res_groups:
+            if res_group.strip() == "": continue
+
+            re_res = re.search(group_re, res_group)
+            if re_res is None:
+                print(f"WARNING: could not parse group {res_group}")
+                continue
+            id, name, _, active, members, admins = re_res.groups()
+
+            # Skip inactive groups
+            if active == "false": continue
+            if members == "[]": continue
+            if name == "null": continue
+
+            members = members[1:-1].split(", ")
+            admins = admins[1:-1].split(", ")
+
+            if id in self.groups.keys():
+                # Send welcome message to new members
+                new_members = set(members) - set(self.groups[id]["members"])
+                for new_member in new_members:
+                    # TODO: send welcome message to new_member
+                    pass
+
+                self.groups[id]["name"] = name
+                self.groups[id]["members"] = members
+                self.groups[id]["admins"] = admins
+            else:
+                self.groups[id] = {
+                    "name": name,
+                    "members": members,
+                    "admins": admins,
+                }
 
     def sendHelp(self, userId, groupId):
         members = getGroupMembers(groupId)
@@ -216,5 +267,9 @@ class SignalObj:
         print(output)
 
         # todo dms to command list
+
+        # Passive refresh
+        if self.groupsTimeStamp - time.time() > PASSIVE_REFRESH:
+            self.genGroups()
 
         return commandList, groupJoins

@@ -6,7 +6,7 @@
     "default": "ex group 1",
     "groups" : {
         "ex group 1" : {
-            "grId" : "",
+            "grId" : "id1",
             "welcomeMessage" : "#bot test Welcome message",
             "commands" : {
                 "test" : "#bot test command from config"
