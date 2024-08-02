@@ -3,16 +3,14 @@
     "noteToSelfMode" : true,
     "testDmId" : "",
     "testGrId" : "",
+    "default": "ex group 1",
     "groups" : {
-        "exGroup1" : {
-            "grId" : "",
-            "grName": "",
+        "ex group 1" : {
+            "grId" : "id1",
             "welcomeMessage" : "#bot test Welcome message",
-            "helpMessage" : "#bot test help message",
             "commands" : {
                 "test" : "#bot test command from config"
             }
         }
     }
-
 }
