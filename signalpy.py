@@ -4,8 +4,10 @@ import re
 import time
 import pprint
 
-ACTIVE_REFRESH = 60 * 5  # Max sec between active refresh (with interaction)
-PASSIVE_REFRESH = 60 * 60  # Max sec between passive refresh (without any interaction)
+# TODO: keys in config.groups group ID instead of group names
+
+ACTIVE_REFRESH = 60 * 5  # Max sec between active refresh (with interaction) TODO placeholder
+PASSIVE_REFRESH = 60 * 60  # Max sec between passive refresh (without any interaction) TODO placeholder
 assert ACTIVE_REFRESH < PASSIVE_REFRESH
 
 baseHelpMessage = "\
@@ -197,7 +199,7 @@ class SignalObj:
 
     def handleCmd(self, userId, msg):
         msg = msg.lower().strip().split()  # TODO: save group names in lower case in config
-        if len(msg) == 1:
+        if len(msg) == 1:  # TODO: assuming one-word commands!
             groupName = self.config["default"]
             groupId = self.config["groups"][groupName]["grId"]
         else:
@@ -215,7 +217,7 @@ class SignalObj:
 
         cmd = msg[0]
         if cmd == "help":
-            self.helps[groupId]
+            self.send(userId, self.helps[groupId])
         elif cmd not in self.config["groups"][groupName]["commands"]:
             self.error(userId, f"do not know command '{cmd}' for group '{groupName}'. Try help to get all possible commands.")
         else:
