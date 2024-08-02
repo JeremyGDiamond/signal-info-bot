@@ -2,6 +2,12 @@ FROM ubuntu:22.04
 
 WORKDIR /code
 
+COPY ./*.py /code
+
+COPY ./*.sh /code
+
+RUN chmod +x linkAccount.sh
+
 RUN apt update
 
 RUN apt install curl -y
@@ -16,13 +22,15 @@ RUN apt-get install signal-cli-native -y
 
 RUN apt-get install qrencode python3 -y
 
-CMD ./linkAccount.sh signalCliContainer;python3 main.py
+# CMD ./linkAccount.sh signalCliContainer;python3 main.py
+
+CMD ./start.sh dockerBot
 
 # todo 
 # X copy files into container
 # - persistant login 
 # - setup script
-#   - checks if logged in
+#   X checks if logged in
 #   X if not links device
 # X run bot
 # - tests endpoint in make
