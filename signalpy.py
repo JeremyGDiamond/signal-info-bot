@@ -25,12 +25,14 @@ default: show the default group name"
 class SignalObj:
 
     def __init__(self, configFileName):
+        self.config = {}
+        self.configFileName = configFileName
+        self.readconfig()
+
         self.groups = {}  # grId: { "name": str, "members": list[str], "admins": list[str] }
         self.groupsTimeStamp = 0
         self.genGroups()
-
-        self.config = {}
-        self.configFileName = configFileName
+        self.validateConfigGroups()
 
         self.readconfig()
         self.helps = {}  # { grId: helpText }
@@ -44,12 +46,15 @@ class SignalObj:
         return message
     
     def send(self, userId, message):
+        # TODO: check if sanitized message is empty?
         subprocess.run(["signal-cli", "send", userId, "-m", self.sanitizeMessage(message)])
         
     def sendGroup(self, groupId, message):
+        # TODO: check if sanitized message is empty?
         subprocess.run(["signal-cli", "send", "-g", groupId, "-m", self.sanitizeMessage(message)])
         
     def sendNTS(self, message):
+        # TODO: check if sanitized message is empty?
         subprocess.run(["signal-cli", "send", "--note-to-self", "-m", self.sanitizeMessage(message)])
 
     def receive(self):
@@ -76,39 +81,48 @@ class SignalObj:
 
     # bot behaviors
     def readconfig(self):
-        """
-        Read and validate config.
-        NOTE: does not check whether bot has access to all groups in the config.
-        """
         with open(self.configFileName) as configFile:
             self.config = json.load(configFile)
 
-            # Check validity of config.
+            # Check default
             if "default" not in self.config.keys():
                 print("WARNING: no default set")
             grIdDefault = self.config["default"]
-            if grIdDefault not in self.groups.keys():
-                print(f"ERROR: bot does not have access to default group with id={grIdDefault}.")
-
-            groups = self.config["groups"]
-            invalid_groups = []
-            for groupId in groups:
-                if groupId not in self.groups.keys():
-                    print(f"WARNING: not a member of group with id={groupId} from config, skipping.")
-                    continue
-                groupName = groups[groupId]["name"]
-                if "welcomeMessage" not in groups[groupId].keys():
-                    groups[groupId]["welcomeMessage"] = ""
-                    print(f"WARNING: no Welcome Message set for group {groupName} id={groupId}.")
-                if "commands" not in groups[groupId].keys() or len(groups[groupId]["commands"]) == 0:
-                    groups[groupId]["commands"] = {}
-                    print(f"WARNING: no commands set for group {groupName} id={groupId}")
-
-            # Remove invalid groups
-            for invalid_group in invalid_groups:
-                del groups[invalid_group]
+            if grIdDefault not in self.config["groups"]:
+                print(f"ERROR: default group with id={grIdDefault} not in config['groups'].")
+                self.config["groups"][grIdDefault]["welcomeMessage"] = ""
+                self.config["groups"][grIdDefault]["commands"] = {}
 
             # print(self.config)
+
+    def validateConfigGroups(self):
+        """
+        Validate config["groups"].
+        NOTE: does not check whether bot has access to all groups in the config.
+        """
+        # Check default
+        grIdDefault = self.config["default"]
+        if grIdDefault not in self.groups.keys():
+            print(f"ERROR: bot does not have access to default group with id={grIdDefault}.")
+
+        # Check groups
+        groups = self.config["groups"]
+        invalid_groups = []
+        for groupId in groups:
+            if groupId not in self.groups.keys():
+                print(f"WARNING: bot does not have access to group with id={groupId} from config, skipping.")  # TODO discuss: how to handle groups in config bot does not have access to
+                continue
+            groupName = groups[groupId]["name"]
+            if "welcomeMessage" not in groups[groupId].keys():
+                groups[groupId]["welcomeMessage"] = ""
+                print(f"WARNING: no Welcome Message set for group {groupName} id={groupId}.")
+            if "commands" not in groups[groupId].keys() or len(groups[groupId]["commands"]) == 0:
+                groups[groupId]["commands"] = {}
+                print(f"WARNING: no commands set for group {groupName} id={groupId}")
+
+        # Remove invalid groups
+        for invalid_group in invalid_groups:
+            del groups[invalid_group]
 
     def adminAlert(self, adminAlertMessage):
         # self.receive()
@@ -162,8 +176,6 @@ class SignalObj:
         """
         Retrieves name, members and admins for each group the bot has access to.
         NOTE: group names are stored lower case.
-        TODO: check for duplicate group names
-        TODO: check for groups bot has lost access to
         TODO discuss: how to deal with duplicate group names
         TODO discuss: how to deal with groups bot has lost access to
         """
@@ -175,6 +187,7 @@ class SignalObj:
         res_groups = res.split("Id: ")
 
         group_re = r"(.+) Name: (.+) Description: (.|\n)* Active: (true|false) .+ Members: (\[.*\]) Pending members: .+ Admins: (\[.*\]) Banned: "
+        new_groups = {}
         for res_group in res_groups:
             if res_group.strip() == "": continue
 
@@ -184,29 +197,45 @@ class SignalObj:
                 continue
             groupId, name, _, active, members, admins = re_res.groups()
 
+            # Only process groups that are in config
+            if groupId not in self.config["groups"].keys(): continue
+
             # Skip inactive groups
             if active == "false": continue
             if members == "[]": continue
             if name == "null": continue
 
+            name = name.lower().strip()
             members = members[1:-1].split(", ")
             admins = admins[1:-1].split(", ")
+
+            if name in new_groups.keys():
+                print(f"ERROR: bot has access to multiple groups with name={name}")
+                continue
+                # TODO: how to handle this, now only the first group is handled.
 
             if groupId in self.groups.keys():
                 # Send welcome message to new members
                 new_members = set(members) - set(self.groups[groupId]["members"])
-                for new_member in new_members:
-                    self.welcome(new_member, groupId)
+                if self.config["groups"][groupId]["welcomeMessage"] != "":
+                    for new_member in new_members:
+                        self.welcome(new_member, groupId)
+                else:
+                    print(f"Did not send {len(new_members)} welcome message for group {name} with id={groupId} because welcome message is empty.")
 
-                self.groups[groupId]["name"] = name.lower().strip()
-                self.groups[groupId]["members"] = members
-                self.groups[groupId]["admins"] = admins
-            else:
-                self.groups[groupId] = {
-                    "name": name,
-                    "members": members,
-                    "admins": admins,
-                }
+            new_groups[groupId] = {
+                "name": name,
+                "members": members,
+                "admins": admins,
+            }
+
+        # Check if bot has lost access to groups.
+        accessLostGrIds = set(self.groups.keys()) - set(new_groups.keys())
+        for grId in accessLostGrIds:
+            grName = self.groups[grId]["name"]
+            print(f"INFO: bot has lost access to group {grName} with id={grId}.")
+
+        self.groups = new_groups
 
     def sendHelp(self, userId, groupId):
         members = self.getGroupMembers(groupId)
@@ -262,7 +291,7 @@ class SignalObj:
             print("Error parsing message, could not find sender ID")
             return None
 
-        # TODO: messages containing these words are skipped
+        # TODO: messages containing these words are skipped now, change this
         ignoreTypes = ["Group call update", "Reaction"]
         for ignoreType in ignoreTypes:
             if f"{ignoreType}:\n" in msg:
