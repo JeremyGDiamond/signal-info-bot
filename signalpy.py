@@ -343,7 +343,8 @@ class SignalObj:
 
     def parseReceive(self):
         output = self.receive()
-        # TODO: uncomment when ready to receive (comment above)
+        # TODO: uncomment when ready to receive (comment out above line)
+        # NOTE: when you receive after a long time of not receiving, I'm pretty sure you'll receive everything since the last time, so maybe disable all parsing etc at first.
         # stdout = self.receive().stdout
         # if stdout.strip() == "":
         #     return
