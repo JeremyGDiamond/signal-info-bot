@@ -4,10 +4,8 @@ import re
 import time
 import pprint
 
-# TODO: keys in config.groups group ID instead of group names
-
-ACTIVE_REFRESH = 60 * 5  # Max sec between active refresh (with interaction) TODO placeholder
-PASSIVE_REFRESH = 60 * 60  # Max sec between passive refresh (without any interaction) TODO placeholder
+ACTIVE_REFRESH = 60 * 5  # Max sec between active refresh (with interaction) TODO discuss: placeholder
+PASSIVE_REFRESH = 60 * 60  # Max sec between passive refresh (without any interaction) TODO discuss: placeholder
 assert ACTIVE_REFRESH < PASSIVE_REFRESH
 
 baseHelpMessage = "\
@@ -27,16 +25,16 @@ default: show the default group name"
 class SignalObj:
 
     def __init__(self, configFileName):
+        self.groups = {}  # grId: { "name": str, "members": list[str], "admins": list[str] }
+        self.groupsTimeStamp = 0
+        self.genGroups()
+
         self.config = {}
         self.configFileName = configFileName
 
         self.readconfig()
-        self.helps = {}
+        self.helps = {}  # { grId: helpText }
         self.genHelps()
-
-        self.groups = {} # <GroupID>: { name: str, members: list[str], admins: list[str] }
-        self.groupsTimeStamp = time.time()
-        self.genGroups()
 
     # needed becuse of shell injections
     def sanitizeMessage(self, message):
@@ -78,26 +76,33 @@ class SignalObj:
 
     # bot behaviors
     def readconfig(self):
-       
+        """
+        Read and validate config.
+        NOTE: does not check whether bot has access to all groups in the config.
+        """
         with open(self.configFileName) as configFile:
             self.config = json.load(configFile)
 
             # Check validity of config.
             if "default" not in self.config.keys():
                 print("WARNING: no default set")
+            grIdDefault = self.config["default"]
+            if grIdDefault not in self.groups.keys():
+                print(f"ERROR: bot does not have access to default group with id={grIdDefault}.")
+
             groups = self.config["groups"]
             invalid_groups = []
-            for group in groups:
-                if "grId" not in groups[group].keys() or groups[group]["grId"].strip() == "":
-                    print(f"WARNING: no ID set for group {group}, removing group")
-                    invalid_groups.append(group)
+            for groupId in groups:
+                if groupId not in self.groups.keys():
+                    print(f"WARNING: not a member of group with id={groupId} from config, skipping.")
                     continue
-                if "welcomeMessage" not in groups[group].keys():
-                    groups[group]["welcomeMessage"] = ""
-                    print(f"WARNING: no Welcome Message set for group {group}")
-                if "commands" not in groups[group].keys() or len(groups[group]["commands"]) == 0:
-                    groups[group]["commands"] = {}
-                    print(f"WARNING: no commands set for group {group}")
+                groupName = groups[groupId]["name"]
+                if "welcomeMessage" not in groups[groupId].keys():
+                    groups[groupId]["welcomeMessage"] = ""
+                    print(f"WARNING: no Welcome Message set for group {groupName} id={groupId}.")
+                if "commands" not in groups[groupId].keys() or len(groups[groupId]["commands"]) == 0:
+                    groups[groupId]["commands"] = {}
+                    print(f"WARNING: no commands set for group {groupName} id={groupId}")
 
             # Remove invalid groups
             for invalid_group in invalid_groups:
@@ -138,18 +143,30 @@ class SignalObj:
             self.send(userId, self.config[groupId]["welcomeMessage"])
 
     def genHelps(self):
-
+        """Generates the help text for each group based on its commands."""
         configGroups = self.config["groups"]
-        
-        for grName, value in configGroups.items():
-            
+
+        for grId, value in configGroups.items():
+            try:
+                grName = self.groups[grId]["name"]
+            except KeyError:
+                continue  # Bot does not have access to group with given id.
+
             grHelp = baseHelpMessage + "\n" + grName + " Commands - "
             for commKey,commValue in value["commands"].items():
                 grHelp = grHelp + "\n" + commKey + ": " + commValue[1]
-            
-            self.helps[grName] = grHelp
+
+            self.helps[grId] = grHelp
 
     def genGroups(self):
+        """
+        Retrieves name, members and admins for each group the bot has access to.
+        NOTE: group names are stored lower case.
+        TODO: check for duplicate group names
+        TODO: check for groups bot has lost access to
+        TODO discuss: how to deal with duplicate group names
+        TODO discuss: how to deal with groups bot has lost access to
+        """
         # Return if not time for active refresh.
         if time.time() - self.groupsTimeStamp < ACTIVE_REFRESH:
             return
@@ -181,7 +198,7 @@ class SignalObj:
                 for new_member in new_members:
                     self.welcome(new_member, groupId)
 
-                self.groups[groupId]["name"] = name
+                self.groups[groupId]["name"] = name.lower().strip()
                 self.groups[groupId]["members"] = members
                 self.groups[groupId]["admins"] = admins
             else:
@@ -192,36 +209,45 @@ class SignalObj:
                 }
 
     def sendHelp(self, userId, groupId):
-        members = getGroupMembers(groupId)
+        members = self.getGroupMembers(groupId)
 
         if userId in members:
-            send(userId, config[groupId][welcomeMessage])
+            self.send(userId, self.helps[groupId])
 
     def handleCmd(self, userId, msg):
-        msg = msg.lower().strip().split()  # TODO: save group names in lower case in config
+        msg = msg.lower().strip().split()
         if len(msg) == 1:  # TODO: assuming one-word commands!
-            groupName = self.config["default"]
-            groupId = self.config["groups"][groupName]["grId"]
-        else:
-            groupName = " ".join(msg[1:])
+            grId = self.config["default"]
             try:
-                groupId = self.config["groups"][groupName]["grId"]
-            except KeyError:
-                self.error(userId, f"cannot find group with name '{groupName}'.")
+                grName = self.groups[grId]["name"]
+            except KeyError:  # Bot does not have access to group
+                self.error(userId, "sorry I'm having some problems, please specify a group name.")
+                print(f"ERROR: bot does not have access to default group with id={grId}.")
+                # TODO: alert admin?
+        else:
+            grName = " ".join(msg[1:]).lower().strip()
+            configGroups = self.config["groups"]
+            grId = None
+            for id in configGroups.keys():
+                if self.groups[grId]["name"] == grName:
+                    grId = id
+
+            if grId is None:
+                self.error(userId, f"cannot find group with name '{grName}'.")
                 return
 
-        members = self.getGroupMembers(groupId)
+        members = self.getGroupMembers(grId)
         if members is None or userId not in members:
-            self.error(userId, f"cannot find group with name '{groupName}'.")
+            self.error(userId, f"cannot find group with name '{grName}'.")
             return
 
         cmd = msg[0]
         if cmd == "help":
-            self.send(userId, self.helps[groupId])
-        elif cmd not in self.config["groups"][groupName]["commands"]:
-            self.error(userId, f"do not know command '{cmd}' for group '{groupName}'. Try help to get all possible commands.")
+            self.send(userId, self.helps[grId])
+        elif cmd not in self.config["groups"][grId]["commands"]:
+            self.error(userId, f"do not know command '{cmd}' for group '{grName}'. Try help to get all possible commands.")
         else:
-            res = self.config["groups"][groupName]["commands"][cmd]
+            res = self.config["groups"][grId]["commands"][cmd]
             self.send(userId, self.sanitizeMessage(res))
 
     def processMsg(self, msg: str):
@@ -233,7 +259,6 @@ class SignalObj:
         try:
             senderId = re.search(r' .+ ([0-9a-z\-\+]+) \(device: ', msg)[1]
         except TypeError:
-            print(msg)
             print("Error parsing message, could not find sender ID")
             return None
 
