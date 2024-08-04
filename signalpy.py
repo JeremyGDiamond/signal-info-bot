@@ -48,10 +48,12 @@ class SignalObj:
     
     def send(self, userId, message):
         # TODO: check if sanitized message is empty?
-        subprocess.run(["signal-cli", "send", userId, "-m", self.sanitizeMessage(message)])
+        if self.authenticate(userId):
+            subprocess.run(["signal-cli", "send", userId, "-m", self.sanitizeMessage(message)])
         
     def sendGroup(self, groupId, message):
         # TODO: check if sanitized message is empty?
+        # TODO authenticate group?
         subprocess.run(["signal-cli", "send", "-g", groupId, "-m", self.sanitizeMessage(message)])
         
     def sendNTS(self, message):
@@ -148,10 +150,23 @@ class SignalObj:
         except KeyError:
             return None
 
+    def authenticate(self, userId) -> bool:
+        """
+        Check whether user has access to bot.
+        TODO discuss: when does a user have access to the bot?
+                        For now: has to be member of the default group.
+        """
+        configGrId = self.config["default"]
+        membersDefault = self.groups[configGrId]["members"]
+
+        logging.info(f"could not authenticate user with id={userId}")
+
+        return (userId in membersDefault)
+
     def error(self, userId, msg):
         self.send(userId, f"ERROR: {msg}")
 
-    def welcome(self, userId, groupId):
+    def sendWelcome(self, userId, groupId):
         members = self.getGroupMembers(groupId)
 
         if userId in members:
@@ -220,7 +235,7 @@ class SignalObj:
                 new_members = set(members) - set(self.groups[groupId]["members"])
                 if self.config["groups"][groupId]["welcomeMessage"] != "":
                     for new_member in new_members:
-                        self.welcome(new_member, groupId)
+                        self.sendWelcome(new_member, groupId)
                 else:
                     logging.info(f"did not send {len(new_members)} welcome message for group {name} with id={groupId} because welcome message is empty")
 
@@ -243,6 +258,14 @@ class SignalObj:
 
         if userId in members:
             self.send(userId, self.helps[groupId])
+
+    def sendDefault(self, userId):
+        defaultGrId = self.config["default"]
+        members = self.getGroupMembers(defaultGrId)
+
+        if userId in members:
+            grName = self.groups[defaultGrId]["name"]
+            self.send(userId, f"\"{grName}\" is the default group.")
 
     def handleCmd(self, userId, msg):
         msg = msg.lower().strip().split()
@@ -273,7 +296,9 @@ class SignalObj:
 
         cmd = msg[0]
         if cmd == "help":
-            self.send(userId, self.helps[grId])
+            self.sendHelp(userId, grId)
+        elif cmd == "default":
+            self.sendDefault(userId)
         elif cmd not in self.config["groups"][grId]["commands"]:
             self.error(userId, f"do not know command '{cmd}' for group '{grName}'. Try help to get all possible commands.")
         else:
@@ -291,6 +316,9 @@ class SignalObj:
         except TypeError:
             logging.error(f"could not parse message, could not find sender ID, message=\"{msg}\"")
             return None
+
+        if not self.authenticate(senderId):
+            return
 
         # TODO: messages containing these words are skipped now, change this
         ignoreTypes = ["Group call update", "Reaction"]
