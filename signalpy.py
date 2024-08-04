@@ -51,10 +51,10 @@ class SignalObj:
         if self.authenticate(userId):
             subprocess.run(["signal-cli", "send", userId, "-m", self.sanitizeMessage(message)])
         
-    def sendGroup(self, groupId, message):
+    def sendGroup(self, grId, message):
         # TODO: check if sanitized message is empty?
         # TODO authenticate group?
-        subprocess.run(["signal-cli", "send", "-g", groupId, "-m", self.sanitizeMessage(message)])
+        subprocess.run(["signal-cli", "send", "-g", grId, "-m", self.sanitizeMessage(message)])
         
     def sendNTS(self, message):
         # TODO: check if sanitized message is empty?
@@ -111,17 +111,17 @@ class SignalObj:
         # Check groups
         groups = self.config["groups"]
         invalid_groups = []
-        for groupId in groups:
-            if groupId not in self.groups.keys():
-                logging.warning(f"bot does not have access to group with id={groupId} from config, skipping")  # TODO discuss: how to handle groups in config bot does not have access to
+        for grId in groups:
+            if grId not in self.groups.keys():
+                logging.warning(f"bot does not have access to group with id={grId} from config, skipping")  # TODO discuss: how to handle groups in config bot does not have access to
                 continue
-            groupName = groups[groupId]["name"]
-            if "welcomeMessage" not in groups[groupId].keys():
-                groups[groupId]["welcomeMessage"] = ""
-                logging.warning(f"no Welcome Message set for group {groupName} id={groupId}")
-            if "commands" not in groups[groupId].keys() or len(groups[groupId]["commands"]) == 0:
-                groups[groupId]["commands"] = {}
-                logging.warning(f"no commands set for group {groupName} id={groupId}")
+            grName = groups[grId]["name"]
+            if "welcomeMessage" not in groups[grId].keys():
+                groups[grId]["welcomeMessage"] = ""
+                logging.warning(f"no Welcome Message set for group {grName} id={grId}")
+            if "commands" not in groups[grId].keys() or len(groups[grId]["commands"]) == 0:
+                groups[grId]["commands"] = {}
+                logging.warning(f"no commands set for group {grName} id={grId}")
 
         # Remove invalid groups
         for invalid_group in invalid_groups:
@@ -134,19 +134,19 @@ class SignalObj:
         else:
             self.send(self.config["testDmId"], adminAlertMessage)
 
-    def getGroupMembers(self, groupId):
+    def getGroupMembers(self, grId):
         self.genGroups()
 
         try:
-            return self.groups[groupId]["members"]
+            return self.groups[grId]["members"]
         except KeyError:
             return None
 
-    def getGroupAdmins(self, groupId):
+    def getGroupAdmins(self, grId):
         self.genGroups()
 
         try:
-            return self.groups[groupId]["admins"]
+            return self.groups[grId]["admins"]
         except KeyError:
             return None
 
@@ -166,11 +166,11 @@ class SignalObj:
     def error(self, userId, msg):
         self.send(userId, f"ERROR: {msg}")
 
-    def sendWelcome(self, userId, groupId):
-        members = self.getGroupMembers(groupId)
+    def sendWelcome(self, userId, grId):
+        members = self.getGroupMembers(grId)
 
         if userId in members:
-            self.send(userId, self.config[groupId]["welcomeMessage"])
+            self.send(userId, self.config[grId]["welcomeMessage"])
 
     def genHelps(self):
         """Generates the help text for each group based on its commands."""
@@ -211,10 +211,10 @@ class SignalObj:
             if re_res is None:
                 logging.warning(f"could not parse group \"{res_group}\"")
                 continue
-            groupId, name, _, active, members, admins = re_res.groups()
+            grId, name, _, active, members, admins = re_res.groups()
 
             # Only process groups that are in config
-            if groupId not in self.config["groups"].keys(): continue
+            if grId not in self.config["groups"].keys(): continue
 
             # Skip inactive groups
             if active == "false": continue
@@ -230,16 +230,16 @@ class SignalObj:
                 continue
                 # TODO: how to handle this, now only the first group is handled.
 
-            if groupId in self.groups.keys():
+            if grId in self.groups.keys():
                 # Send welcome message to new members
-                new_members = set(members) - set(self.groups[groupId]["members"])
-                if self.config["groups"][groupId]["welcomeMessage"] != "":
+                new_members = set(members) - set(self.groups[grId]["members"])
+                if self.config["groups"][grId]["welcomeMessage"] != "":
                     for new_member in new_members:
-                        self.sendWelcome(new_member, groupId)
+                        self.sendWelcome(new_member, grId)
                 else:
-                    logging.info(f"did not send {len(new_members)} welcome message for group {name} with id={groupId} because welcome message is empty")
+                    logging.info(f"did not send {len(new_members)} welcome message for group {name} with id={grId} because welcome message is empty")
 
-            new_groups[groupId] = {
+            new_groups[grId] = {
                 "name": name,
                 "members": members,
                 "admins": admins,
@@ -253,11 +253,11 @@ class SignalObj:
 
         self.groups = new_groups
 
-    def sendHelp(self, userId, groupId):
-        members = self.getGroupMembers(groupId)
+    def sendHelp(self, userId, grId):
+        members = self.getGroupMembers(grId)
 
         if userId in members:
-            self.send(userId, self.helps[groupId])
+            self.send(userId, self.helps[grId])
 
     def sendDefault(self, userId):
         defaultGrId = self.config["default"]
