@@ -2,6 +2,7 @@ import subprocess
 import json
 import re
 import time
+import logging
 import pprint
 
 ACTIVE_REFRESH = 60 * 5  # Max sec between active refresh (with interaction) TODO discuss: placeholder
@@ -86,10 +87,10 @@ class SignalObj:
 
             # Check default
             if "default" not in self.config.keys():
-                print("WARNING: no default set")
+                logging.warning("no default set in config")
             grIdDefault = self.config["default"]
             if grIdDefault not in self.config["groups"]:
-                print(f"ERROR: default group with id={grIdDefault} not in config['groups'].")
+                logging.error(f"default group with id={grIdDefault} not in config[\"groups\"]")
                 self.config["groups"][grIdDefault]["welcomeMessage"] = ""
                 self.config["groups"][grIdDefault]["commands"] = {}
 
@@ -103,22 +104,22 @@ class SignalObj:
         # Check default
         grIdDefault = self.config["default"]
         if grIdDefault not in self.groups.keys():
-            print(f"ERROR: bot does not have access to default group with id={grIdDefault}.")
+            logging.error(f"bot does not have access to default group with id={grIdDefault}")
 
         # Check groups
         groups = self.config["groups"]
         invalid_groups = []
         for groupId in groups:
             if groupId not in self.groups.keys():
-                print(f"WARNING: bot does not have access to group with id={groupId} from config, skipping.")  # TODO discuss: how to handle groups in config bot does not have access to
+                logging.warning(f"bot does not have access to group with id={groupId} from config, skipping")  # TODO discuss: how to handle groups in config bot does not have access to
                 continue
             groupName = groups[groupId]["name"]
             if "welcomeMessage" not in groups[groupId].keys():
                 groups[groupId]["welcomeMessage"] = ""
-                print(f"WARNING: no Welcome Message set for group {groupName} id={groupId}.")
+                logging.warning(f"no Welcome Message set for group {groupName} id={groupId}")
             if "commands" not in groups[groupId].keys() or len(groups[groupId]["commands"]) == 0:
                 groups[groupId]["commands"] = {}
-                print(f"WARNING: no commands set for group {groupName} id={groupId}")
+                logging.warning(f"no commands set for group {groupName} id={groupId}")
 
         # Remove invalid groups
         for invalid_group in invalid_groups:
@@ -193,7 +194,7 @@ class SignalObj:
 
             re_res = re.search(group_re, res_group)
             if re_res is None:
-                print(f"WARNING: could not parse group {res_group}")
+                logging.warning(f"could not parse group \"{res_group}\"")
                 continue
             groupId, name, _, active, members, admins = re_res.groups()
 
@@ -210,7 +211,7 @@ class SignalObj:
             admins = admins[1:-1].split(", ")
 
             if name in new_groups.keys():
-                print(f"ERROR: bot has access to multiple groups with name={name}")
+                logging.error(f"bot has access to multiple groups with name={name}")
                 continue
                 # TODO: how to handle this, now only the first group is handled.
 
@@ -221,7 +222,7 @@ class SignalObj:
                     for new_member in new_members:
                         self.welcome(new_member, groupId)
                 else:
-                    print(f"Did not send {len(new_members)} welcome message for group {name} with id={groupId} because welcome message is empty.")
+                    logging.info(f"did not send {len(new_members)} welcome message for group {name} with id={groupId} because welcome message is empty")
 
             new_groups[groupId] = {
                 "name": name,
@@ -233,7 +234,7 @@ class SignalObj:
         accessLostGrIds = set(self.groups.keys()) - set(new_groups.keys())
         for grId in accessLostGrIds:
             grName = self.groups[grId]["name"]
-            print(f"INFO: bot has lost access to group {grName} with id={grId}.")
+            logging.info(f"bot has lost access to group {grName} with id={grId}")
 
         self.groups = new_groups
 
@@ -251,7 +252,7 @@ class SignalObj:
                 grName = self.groups[grId]["name"]
             except KeyError:  # Bot does not have access to group
                 self.error(userId, "sorry I'm having some problems, please specify a group name.")
-                print(f"ERROR: bot does not have access to default group with id={grId}.")
+                logging.error(f"bot does not have access to default group with id={grId}")
                 # TODO: alert admin?
         else:
             grName = " ".join(msg[1:]).lower().strip()
@@ -282,20 +283,20 @@ class SignalObj:
     def processMsg(self, msg: str):
         if msg == "": return
         if "Group info:\n" in msg: # Skip group messages
-            print("skipping group message")
+            print("skipping group message")  # TODO: remove (debug)
             return None
 
         try:
             senderId = re.search(r' .+ ([0-9a-z\-\+]+) \(device: ', msg)[1]
         except TypeError:
-            print("Error parsing message, could not find sender ID")
+            logging.error(f"could not parse message, could not find sender ID, message=\"{msg}\"")
             return None
 
         # TODO: messages containing these words are skipped now, change this
         ignoreTypes = ["Group call update", "Reaction"]
         for ignoreType in ignoreTypes:
             if f"{ignoreType}:\n" in msg:
-                print(f"Received {ignoreType} from {senderId}, skipping")
+                logging.info(f"received {ignoreType} from {senderId}, skipping")
                 return None
         cannotHandleTypes = ["Attachment", "Contacts", "Sticker", "Story reply"] # Story reply seems to be picture, location, audio?
         for cannotHandleType in cannotHandleTypes:
@@ -308,7 +309,7 @@ class SignalObj:
 
         # TODO: multi-line messages (see ReceiveMesageHandler.printDataMessage)
         body = self.sanitizeMessage(msg.split("Body: ")[1].split("\n")[0])
-        print(f"received message from {senderId}: {body}")
+        print(f"received message from {senderId}: {body}")  # TODO: remove (debug)
 
         self.handleCmd(senderId, body)
 
