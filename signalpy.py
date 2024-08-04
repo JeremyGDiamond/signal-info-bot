@@ -16,10 +16,10 @@ example: help group I'm in\n\
 \n\
 If no group is given the default group is used\n\
 \n\
-Command List\n\
-help: show this message for the group\n\
-welcome: show welcome message again\n\
-default: show the default group name"
+---Command List---\n\
+  help: show this message for the group\n\
+  welcome: show welcome message again\n\
+  default: show the default group name"
 
 
 # signal class
@@ -61,10 +61,8 @@ class SignalObj:
         subprocess.run(["signal-cli", "send", "--note-to-self", "-m", self.sanitizeMessage(message)])
 
     def receive(self):
-        output = self.listGroups()
-        # output = subprocess.run(["signal-cli", "receive"], # TODO
-        # capture_output=True, text=True) # TODO
-        # print(output)
+        output = subprocess.run(["signal-cli", "receive"],
+        capture_output=True, text=True)
         return (output)
 
     def listGroups(self):
@@ -77,9 +75,8 @@ class SignalObj:
     def getGroupInfo(self):
         # TODO add refersh message to get inactive groups
 
-        output = subprocess.run(["signal-cli", ""], 
+        output = subprocess.run(["signal-cli", ""],
         capture_output=True, text=True)
-        print(output)
         return (output)
 
     # bot behaviors
@@ -93,6 +90,7 @@ class SignalObj:
             grIdDefault = self.config["default"]
             if grIdDefault not in self.config["groups"]:
                 logging.error(f"default group with id={grIdDefault} not in config[\"groups\"]")
+                self.config["groups"][grIdDefault] = {}
                 self.config["groups"][grIdDefault]["welcomeMessage"] = ""
                 self.config["groups"][grIdDefault]["commands"] = {}
 
@@ -109,23 +107,18 @@ class SignalObj:
             logging.error(f"bot does not have access to default group with id={grIdDefault}")
 
         # Check groups
-        groups = self.config["groups"]
-        invalid_groups = []
-        for grId in groups:
+        configGroups = self.config["groups"]
+        for grId in configGroups:
             if grId not in self.groups.keys():
                 logging.warning(f"bot does not have access to group with id={grId} from config, skipping")  # TODO discuss: how to handle groups in config bot does not have access to
                 continue
-            grName = groups[grId]["name"]
-            if "welcomeMessage" not in groups[grId].keys():
-                groups[grId]["welcomeMessage"] = ""
+            grName = self.groups[grId]["name"]
+            if "welcomeMessage" not in configGroups[grId].keys():
+                configGroups[grId]["welcomeMessage"] = ""
                 logging.warning(f"no Welcome Message set for group {grName} id={grId}")
-            if "commands" not in groups[grId].keys() or len(groups[grId]["commands"]) == 0:
-                groups[grId]["commands"] = {}
-                logging.warning(f"no commands set for group {grName} id={grId}")
-
-        # Remove invalid groups
-        for invalid_group in invalid_groups:
-            del groups[invalid_group]
+            if "commands" not in configGroups[grId].keys() or len(configGroups[grId]["commands"]) == 0:
+                configGroups[grId]["commands"] = {}
+                logging.warning(f"no commands set for group \"{grName}\" id={grId}")
 
     def adminAlert(self, adminAlertMessage):
         # self.receive()
@@ -159,9 +152,11 @@ class SignalObj:
         configGrId = self.config["default"]
         membersDefault = self.groups[configGrId]["members"]
 
-        logging.info(f"could not authenticate user with id={userId}")
+        if userId in membersDefault:
+            return True
 
-        return (userId in membersDefault)
+        logging.info(f"could not authenticate user with id={userId}")
+        return False
 
     def error(self, userId, msg):
         self.send(userId, f"ERROR: {msg}")
@@ -170,7 +165,7 @@ class SignalObj:
         members = self.getGroupMembers(grId)
 
         if userId in members:
-            self.send(userId, self.config[grId]["welcomeMessage"])
+            self.send(userId, self.config["groups"][grId]["welcomeMessage"])
 
     def genHelps(self):
         """Generates the help text for each group based on its commands."""
@@ -182,9 +177,12 @@ class SignalObj:
             except KeyError:
                 continue  # Bot does not have access to group with given id.
 
-            grHelp = baseHelpMessage + "\n" + grName + " Commands - "
-            for commKey,commValue in value["commands"].items():
-                grHelp = grHelp + "\n" + commKey + ": " + commValue[1]
+            grHelp = baseHelpMessage + "\n--\"" + grName + "\" Commands--"
+            for commKey, commValue in value["commands"].items():
+                cutOff = ""
+                if len(commValue) > 50:
+                    cutOff = "[...]"
+                grHelp = grHelp + "\n  " + commKey + ": " + commValue[:50] + cutOff
 
             self.helps[grId] = grHelp
 
@@ -214,7 +212,8 @@ class SignalObj:
             grId, name, _, active, members, admins = re_res.groups()
 
             # Only process groups that are in config
-            if grId not in self.config["groups"].keys(): continue
+            if grId not in self.config["groups"].keys():
+                continue
 
             # Skip inactive groups
             if active == "false": continue
@@ -282,7 +281,7 @@ class SignalObj:
             configGroups = self.config["groups"]
             grId = None
             for id in configGroups.keys():
-                if self.groups[grId]["name"] == grName:
+                if self.groups[id]["name"] == grName:
                     grId = id
 
             if grId is None:
@@ -294,11 +293,13 @@ class SignalObj:
             self.error(userId, f"cannot find group with name '{grName}'.")
             return
 
-        cmd = msg[0]
+        cmd = msg[0].lower().strip()
         if cmd == "help":
             self.sendHelp(userId, grId)
         elif cmd == "default":
             self.sendDefault(userId)
+        elif cmd == "welcome":
+            self.sendWelcome(userId, grId)
         elif cmd not in self.config["groups"][grId]["commands"]:
             self.error(userId, f"do not know command '{cmd}' for group '{grName}'. Try help to get all possible commands.")
         else:
@@ -307,9 +308,8 @@ class SignalObj:
 
     def processMsg(self, msg: str):
         if msg == "": return
-        if "Group info:\n" in msg: # Skip group messages
-            print("skipping group message")  # TODO: remove (debug)
-            return None
+        # Skip group messages
+        if "Group info:\n" in msg: return None
 
         try:
             senderId = re.search(r' .+ ([0-9a-z\-\+]+) \(device: ', msg)[1]
@@ -337,18 +337,16 @@ class SignalObj:
 
         # TODO: multi-line messages (see ReceiveMesageHandler.printDataMessage)
         body = self.sanitizeMessage(msg.split("Body: ")[1].split("\n")[0])
-        print(f"received message from {senderId}: {body}")  # TODO: remove (debug)
+        logging.debug(f"received msg from {senderId}: {body}")
 
         self.handleCmd(senderId, body)
 
     def parseReceive(self):
-        output = self.receive()
-        # TODO: uncomment when ready to receive (comment out above line)
-        # NOTE: when you receive after a long time of not receiving, I'm pretty sure you'll receive everything since the last time, so maybe disable all parsing etc at first.
-        # stdout = self.receive().stdout
-        # if stdout.strip() == "":
-        #     return
-        # for msg in stdout.split("Envelope from:"):
+        rcv_stdout = self.receive().stdout
+        if rcv_stdout.strip() == "":
+            return
+        # TODO: uncomment. When you receive after a long time of not receiving, I'm pretty sure you'll receive everything since the last time, so don't uncomment following two lines before running once without them
+        # for msg in rcv_stdout.split("Envelope from:"):
         #     self.processMsg(msg)
 
         directMessages = []
@@ -357,7 +355,7 @@ class SignalObj:
         commandList = []
         groupJoins = []
         # pp = pprint.PrettyPrinter()
-        print(output)
+        # print(output)
 
         # todo dms to command list
 
