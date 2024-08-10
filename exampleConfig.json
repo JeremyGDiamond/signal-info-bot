@@ -3,10 +3,9 @@
     "noteToSelfMode" : true,
     "testDmId" : "",
     "testGrId" : "",
-    "default": "ex group 1",
+    "default": "gr1id",
     "groups" : {
-        "ex group 1" : {
-            "grId" : "id1",
+        "gr1id" : {
             "welcomeMessage" : "#bot test Welcome message",
             "commands" : {
                 "test" : "#bot test command from config"
