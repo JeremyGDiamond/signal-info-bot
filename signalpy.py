@@ -186,6 +186,15 @@ class SignalObj:
 
             self.helps[grId] = grHelp
 
+    def activateGroup(self, grId):
+        """
+        Sends a message to the given group to make it active again.
+        Groups become inactive when there has been no activity for a certain period of time.
+        """
+        activationMsg = "#bot This is an activation message, you can ignore it."
+
+        self.sendGroup(grId, activationMsg)
+
     def genGroups(self):
         """
         Retrieves name, members and admins for each group the bot has access to.
@@ -215,8 +224,13 @@ class SignalObj:
             if grId not in self.config["groups"].keys():
                 continue
 
-            # Skip inactive groups
-            if active == "false": continue
+            # Deal with inactive groups
+            if active == "false":
+                # TODO COMMMENT OUT THE FOLLOWING LINE WHEN TESTING WITH PERSONAL ACCOUNT
+                # self.activateGroup(grId) #TODO uncomment when running for real
+                continue
+
+            # Skip invalid groups
             if members == "[]": continue
             if name == "null": continue
 
