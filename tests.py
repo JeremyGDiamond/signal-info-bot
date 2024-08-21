@@ -22,16 +22,21 @@ def testAdminAlert():
 def testParseReceive():
     signal.parseReceive()
 
+def testGetGroupInfo():
+    signal.getGroupInfo()
+
 
 
 def main():
     
     print("tests")
+    # print(signal.helps)
 
     # testSend()
     # testSendGroup()
-    testAdminAlert()
-    testParseReceive()
+    # testAdminAlert()
+    # testParseReceive()
+    testGetGroupInfo()
     
     
     # todo
