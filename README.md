@@ -3,21 +3,21 @@
 Welcome and info bot for signal groups based on [signal cli](https://github.com/AsamK/signal-cli)
 
 ## TODO
-- [ ] MVP
+- [-] MVP
   - [ ] parse commands
   - [x] Welcome message & command
   - [x] default command (shows the default group name to members)
   - [x] pulls command list and resps from json config file
-  - [-] help command
+  - [X] help command
     - [x] basic help
-  - [-] dockerize
+  - [X] dockerize
     - [x] ubuntu image
     - [x] installs all deps
     - [x] copy files
     - [x] login to account if logged out
     - [x] run bot
-    - [ ] persistent volume
-  - [ ] multi groups
+    - [X] persistent volume
+  - [X] multi groups
   
 - [ ] beta
   - [ ] update command
@@ -55,7 +55,13 @@ It is recommended that you use a dedicated account for this bot.
    - `python3 main.py`
 
 ### Docker
- Todo
+Run `make run` to build the conatiner and run it
+
+Each make run will need to be linked to the singal account and the old one should be removed before a new one is made
+
+Run `make restart` to restart an exiting containter and not need to relink everything
+
+
 
 ## Command Convention
 All commands must be one word all lower case. The bot will have a default group if you want to use a differant group follow the command with the group name. update is more complicated see below for details.
