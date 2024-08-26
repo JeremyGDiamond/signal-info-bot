@@ -57,6 +57,8 @@ class SignalObj:
                 newMessage.append("\u2008")
             elif c == ":":
                 newMessage.append("\u02F8")
+            elif c == ",":
+                newMessage.append("\u201A")
             else:
                 changes = changes+1
             
