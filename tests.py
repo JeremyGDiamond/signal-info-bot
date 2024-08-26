@@ -22,12 +22,15 @@ def testGenHelps(): #TODO alpha
 # test message sanitizer
 
 def passSan(): #TODO alpha
-    pass
+    signal.sanitizeMessage("This message should be the same")
 
 def failEachBlockedChar(); #TODO alpha
     pass
 
 def failEachBlockedStrings(); #TODO alpha
+    pass
+
+def failEachTestCommand(); #TODO alpha
     pass
 
 # test signal funcs

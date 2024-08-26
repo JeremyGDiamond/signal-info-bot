@@ -38,35 +38,66 @@ class SignalObj:
         self.helps = {}  # { grId: helpText }
         self.genHelps()
 
+        self.commandInjectionBlockChars = []
+        self.commandInjectionBlockStrings = []
+
     # needed becuse of shell injections
     def sanitizeMessage(self, message):
         
-        # TODO`HOLY SHIT DO THIS BEFORE GOING PUBLIC !!!!!`
+        # remove offending chars
+        changes = 0
+        newMessage = ""
 
-        return message
+        for c in message:
+            if c.isalnum():
+                newMessage.append(c)
+            elif c == ".":
+                newMessage.append("\uA4F8")
+            elif c == " ":
+                newMessage.append("\u2008")
+            elif c == ":":
+                newMessage.append("\u02F8")
+            else:
+                changes = changes+1
+            
+        
+        
+        # send an error if there were any changes
+        if changes != 0:
+            errorMessage = "sanitizer caught " + changes + " changes see long"
+            logging.error(f"sanitizer caught " + changes + " msg: " + message)
+            self.error(self.config[admin], errorMessage)
+
+        return message, changes
     
     def send(self, userId, message):
         # TODO: check if sanitized message is empty?
         if self.authenticate(userId):
-            subprocess.run(["signal-cli", "send", userId, "-m", self.sanitizeMessage(message)])
+            sanitizedMessage, changes = self.sanitizeMessage(message)
+            if len(sanitizedMessage) != 0:
+                subprocess.run(["signal-cli", "send", userId, "-m", sanitizedMessage], shell=False)
         
     def sendGroup(self, grId, message):
         # TODO: check if sanitized message is empty?
         # TODO authenticate group?
-        subprocess.run(["signal-cli", "send", "-g", grId, "-m", self.sanitizeMessage(message)])
+        sanitizedMessage, changes = self.sanitizeMessage(message)
+        if len(sanitizedMessage) != 0:
+            subprocess.run(["signal-cli", "send", "-g", grId, "-m", sanitizedMessage], shell=False)
         
     def sendNTS(self, message):
         # TODO: check if sanitized message is empty?
-        subprocess.run(["signal-cli", "send", "--note-to-self", "-m", self.sanitizeMessage(message)])
+        sanitizedMessage, changes = self.sanitizeMessage(message)
+        if len(sanitizedMessage) != 0:
+                subprocess.run(["signal-cli", "send", "--note-to-self", "-m", sanitizedMessage], shell=False)
 
     def receive(self):
         output = subprocess.run(["signal-cli", "receive"],
-        capture_output=True, text=True)
+        capture_output=True, text=True, shell=False)
         return (output)
 
     def listGroups(self):
         output = subprocess.run(["signal-cli", "listGroups", "-d"],
-        capture_output=True, text=True)
+        capture_output=True, text=True, shell=False)
         self.groupsTimeStamp = time.time()
 
         return (output)
