@@ -35,7 +35,6 @@ class SignalObj:
         self.genGroups()
         self.validateConfigGroups()
 
-        self.readconfig()
         self.helps = {}  # { grId: helpText }
         self.genHelps()
 
@@ -326,7 +325,12 @@ class SignalObj:
         if "Group info:\n" in msg: return None
 
         try:
-            senderId = re.search(r' .+ ([0-9a-z\-\+]+) \(device: ', msg)[1]
+            # Extracts user ID from message, searches for a space, then the username
+            # (“.+” in the regex) followed by a space and the user ID of the 
+            # sender made up ofnumbers, lowercase letters, - and +
+            # ([0-9a-z\-\+]+ in the regex), followed by  (device:.
+            # Example: " “user123 (some info)” x1z345a6-789b-1234-c56d-7891e2fg345h (device: "
+            senderId = re.search(r' “.+” ([0-9a-z\-\+]+) \(device: ', msg)[1]
         except TypeError:
             logging.error(f"could not parse message, could not find sender ID, message=\"{msg}\"")
             return None
