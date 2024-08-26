@@ -35,7 +35,6 @@ class SignalObj:
         self.genGroups()
         self.validateConfigGroups()
 
-        self.readconfig()
         self.helps = {}  # { grId: helpText }
         self.genHelps()
 
@@ -72,14 +71,7 @@ class SignalObj:
 
         return (output)
 
-    def getGroupInfo(self):
-        # TODO add refersh message to get inactive groups
-
-        output = subprocess.run(["signal-cli", ""],
-        capture_output=True, text=True)
-        return (output)
-
-    # bot behaviors
+    # Init functions
     def readconfig(self):
         with open(self.configFileName) as configFile:
             self.config = json.load(configFile)
@@ -119,81 +111,6 @@ class SignalObj:
             if "commands" not in configGroups[grId].keys() or len(configGroups[grId]["commands"]) == 0:
                 configGroups[grId]["commands"] = {}
                 logging.warning(f"no commands set for group \"{grName}\" id={grId}")
-
-    def adminAlert(self, adminAlertMessage):
-        # self.receive()
-        if self.config["noteToSelfMode"]:
-            self.sendNTS(adminAlertMessage)
-        else:
-            self.send(self.config["testDmId"], adminAlertMessage)
-
-    def getGroupMembers(self, grId):
-        self.genGroups()
-
-        try:
-            return self.groups[grId]["members"]
-        except KeyError:
-            return None
-
-    def getGroupAdmins(self, grId):
-        self.genGroups()
-
-        try:
-            return self.groups[grId]["admins"]
-        except KeyError:
-            return None
-
-    def authenticate(self, userId) -> bool:
-        """
-        Check whether user has access to bot.
-        TODO discuss: when does a user have access to the bot?
-                        For now: has to be member of the default group.
-        """
-        configGrId = self.config["default"]
-        membersDefault = self.groups[configGrId]["members"]
-
-        if userId in membersDefault:
-            return True
-
-        logging.info(f"could not authenticate user with id={userId}")
-        return False
-
-    def error(self, userId, msg):
-        self.send(userId, f"ERROR: {msg}")
-
-    def sendWelcome(self, userId, grId):
-        members = self.getGroupMembers(grId)
-
-        if userId in members:
-            self.send(userId, self.config["groups"][grId]["welcomeMessage"])
-
-    def genHelps(self):
-        """Generates the help text for each group based on its commands."""
-        configGroups = self.config["groups"]
-
-        for grId, value in configGroups.items():
-            try:
-                grName = self.groups[grId]["name"]
-            except KeyError:
-                continue  # Bot does not have access to group with given id.
-
-            grHelp = baseHelpMessage + "\n--\"" + grName + "\" Commands--"
-            for commKey, commValue in value["commands"].items():
-                cutOff = ""
-                if len(commValue) > 50:
-                    cutOff = "[...]"
-                grHelp = grHelp + "\n  " + commKey + ": " + commValue[:50] + cutOff
-
-            self.helps[grId] = grHelp
-
-    def activateGroup(self, grId):
-        """
-        Sends a message to the given group to make it active again.
-        Groups become inactive when there has been no activity for a certain period of time.
-        """
-        activationMsg = "#bot This is an activation message, you can ignore it."
-
-        self.sendGroup(grId, activationMsg)
 
     def genGroups(self):
         """
@@ -265,6 +182,82 @@ class SignalObj:
             logging.info(f"bot has lost access to group {grName} with id={grId}")
 
         self.groups = new_groups
+    
+    def genHelps(self):
+        """Generates the help text for each group based on its commands."""
+        configGroups = self.config["groups"]
+
+        for grId, value in configGroups.items():
+            try:
+                grName = self.groups[grId]["name"]
+            except KeyError:
+                continue  # Bot does not have access to group with given id.
+
+            grHelp = baseHelpMessage + "\n--\"" + grName + "\" Commands--"
+            for commKey, commValue in value["commands"].items():
+                cutOff = ""
+                if len(commValue) > 50:
+                    cutOff = "[...]"
+                grHelp = grHelp + "\n  " + commKey + ": " + commValue[:50] + cutOff
+
+            self.helps[grId] = grHelp
+
+    # bot behaviors
+    def adminAlert(self, adminAlertMessage):
+        # self.receive()
+        if self.config["noteToSelfMode"]:
+            self.sendNTS(adminAlertMessage)
+        else:
+            self.send(self.config["testDmId"], adminAlertMessage)
+
+    def getGroupMembers(self, grId):
+        self.genGroups()
+
+        try:
+            return self.groups[grId]["members"]
+        except KeyError:
+            return None
+
+    def getGroupAdmins(self, grId):
+        self.genGroups()
+
+        try:
+            return self.groups[grId]["admins"]
+        except KeyError:
+            return None
+
+    def authenticate(self, userId) -> bool:
+        """
+        Check whether user has access to bot.
+        TODO discuss: when does a user have access to the bot?
+                        For now: has to be member of the default group.
+        """
+        configGrId = self.config["default"]
+        membersDefault = self.groups[configGrId]["members"]
+
+        if userId in membersDefault:
+            return True
+
+        logging.info(f"could not authenticate user with id={userId}")
+        return False
+
+    def error(self, userId, msg):
+        self.send(userId, f"ERROR: {msg}")
+
+    def sendWelcome(self, userId, grId):
+        members = self.getGroupMembers(grId)
+
+        if userId in members:
+            self.send(userId, self.config["groups"][grId]["welcomeMessage"])
+
+    def activateGroup(self, grId):
+        """
+        Sends a message to the given group to make it active again.
+        Groups become inactive when there has been no activity for a certain period of time.
+        """
+        activationMsg = "#bot This is an activation message, you can ignore it."
+
+        self.sendGroup(grId, activationMsg)
 
     def sendHelp(self, userId, grId):
         members = self.getGroupMembers(grId)
