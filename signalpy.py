@@ -68,24 +68,21 @@ class SignalObj:
             logging.error(f"sanitizer caught " + changes + " msg: " + message)
             self.error(self.config[admin], errorMessage)
 
-        return message, changes
+        return newMessage, changes
     
     def send(self, userId, message):
-        # TODO: check if sanitized message is empty?
         if self.authenticate(userId):
             sanitizedMessage, changes = self.sanitizeMessage(message)
             if len(sanitizedMessage) != 0:
                 subprocess.run(["signal-cli", "send", userId, "-m", sanitizedMessage], shell=False)
         
     def sendGroup(self, grId, message):
-        # TODO: check if sanitized message is empty?
-        # TODO authenticate group?
+        # TODO alpha authenticate group?
         sanitizedMessage, changes = self.sanitizeMessage(message)
         if len(sanitizedMessage) != 0:
             subprocess.run(["signal-cli", "send", "-g", grId, "-m", sanitizedMessage], shell=False)
         
     def sendNTS(self, message):
-        # TODO: check if sanitized message is empty?
         sanitizedMessage, changes = self.sanitizeMessage(message)
         if len(sanitizedMessage) != 0:
                 subprocess.run(["signal-cli", "send", "--note-to-self", "-m", sanitizedMessage], shell=False)
