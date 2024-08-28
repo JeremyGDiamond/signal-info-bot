@@ -50,15 +50,15 @@ class SignalObj:
 
         for c in message:
             if c.isalnum():
-                newMessage.append(c)
+                newMessage += c
             elif c == ".":
-                newMessage.append("\uA4F8")
+                newMessage += "\uA4F8"
             elif c == " ":
-                newMessage.append("\u2008")
+                newMessage += "\u2008"
             elif c == ":":
-                newMessage.append("\u02F8")
+                newMessage += "\u02F8"
             elif c == ",":
-                newMessage.append("\u201A")
+                newMessage += "\u201A"
             else:
                 changes = changes+1
             
@@ -66,10 +66,11 @@ class SignalObj:
         
         # send an error if there were any changes
         if changes != 0:
-            errorMessage = "sanitizer caught " + changes + " changes see long"
-            logging.error(f"sanitizer caught " + changes + " msg: " + message)
+            
+            errorMessage = f"sanitizer caught {changes} changes see long"
+            logging.error(f"sanitizer caught {changes} msg: {message}")
             self.error(self.config[admin], errorMessage)
-
+        
         return newMessage, changes
     
     def send(self, userId, message):

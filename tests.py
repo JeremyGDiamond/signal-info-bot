@@ -5,6 +5,12 @@ import time
 
 signal = signalpy.SignalObj("testConfig.json")
 
+def passedTestPrint(name):
+    print(f"TEST:{name} PASSED")
+
+def failedTestPrint(name, msg):
+    print(f"TEST:{name} FAILED, {msg}")
+
 # test init
 
 def testReadConfig(): #TODO alpha
@@ -22,7 +28,39 @@ def testGenHelps(): #TODO alpha
 # test message sanitizer
 
 def passSan(): #TODO alpha
-    signal.sanitizeMessage("This message should be the same")
+    message0 = "ThisMessageShouldBeTheSame1234567890" #alpha num
+    message1 = "ThisMessageShouldEndWithAConfused." #test .
+    message2 = "ThisMessageShouldEndWithAConfusedSpace " #test space
+    message3 = "ThisMessageShouldEndWithAConfused:" #test :
+    message4 = "ThisMessageShouldEndWithAConfused," #test ,
+
+    sanitizedMessage, changes = signal.sanitizeMessage(message0)
+    if not (sanitizedMessage == message0):
+        failedTestPrint("passSan", "ERROR message0 mismatch")
+        return
+    
+    sanitizedMessage, changes = signal.sanitizeMessage(message1)
+    if (sanitizedMessage == message1 or ord(sanitizedMessage[-1]) != 42232):
+        failedTestPrint("passSan", "ERROR message1 mismatch")
+        return
+        
+    sanitizedMessage, changes = signal.sanitizeMessage(message2)
+    if (sanitizedMessage == message2 or ord(sanitizedMessage[-1]) != 8200):
+        failedTestPrint("passSan", "ERROR message2 mismatch")
+        return
+    
+    sanitizedMessage, changes = signal.sanitizeMessage(message3)
+    if (sanitizedMessage == message3 or ord(sanitizedMessage[-1]) != 760):
+        failedTestPrint("passSan", "ERROR message3 mismatch")
+        return
+    
+    sanitizedMessage, changes = signal.sanitizeMessage(message4)
+    if (sanitizedMessage == message4 or ord(sanitizedMessage[-1]) != 8218):
+        failedTestPrint("passSan", "ERROR message4 mismatch")
+        return
+
+    passedTestPrint("passSan")
+
 
 def failEachBlockedChar(): #TODO alpha
     pass
@@ -97,14 +135,19 @@ def testParseReceive():
 
 def main():
     
-    print("tests")
+    print("signalpi Tests")
+
+    # san tests
+    passSan()
+
+
     # print(signal.helps)
 
     # testSend()
     # testSendGroup()
     # testAdminAlert()
     # testParseReceive()
-    testGetGroupInfo()
+    # testGetGroupInfo()
     
     
     # todo
