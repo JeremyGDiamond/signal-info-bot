@@ -24,13 +24,13 @@ def testGenHelps(): #TODO alpha
 def passSan(): #TODO alpha
     signal.sanitizeMessage("This message should be the same")
 
-def failEachBlockedChar(); #TODO alpha
+def failEachBlockedChar(): #TODO alpha
     pass
 
-def failEachBlockedStrings(); #TODO alpha
+def failEachBlockedStrings(): #TODO alpha
     pass
 
-def failEachTestCommand(); #TODO alpha
+def failEachTestCommand(): #TODO alpha
     pass
 
 # test signal funcs
@@ -62,6 +62,12 @@ def testGetGroupAdmins(): #TODO alpha
     pass
 
 def testError(): #TODO alpha
+    pass
+
+def testAuth(): #TODO alpha
+    pass
+
+def testAuthGroup(): #TODO alpha
     pass
 
 def testSendWelcome(): #TODO alpha

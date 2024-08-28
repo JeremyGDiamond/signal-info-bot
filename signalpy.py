@@ -80,9 +80,11 @@ class SignalObj:
         
     def sendGroup(self, grId, message):
         # TODO alpha authenticate group?
-        sanitizedMessage, changes = self.sanitizeMessage(message)
-        if len(sanitizedMessage) != 0:
-            subprocess.run(["signal-cli", "send", "-g", grId, "-m", sanitizedMessage], shell=False)
+
+        if self.authenticateGroup(userId, grId):
+            sanitizedMessage, changes = self.sanitizeMessage(message)
+            if len(sanitizedMessage) != 0:
+                subprocess.run(["signal-cli", "send", "-g", grId, "-m", sanitizedMessage], shell=False)
         
     def sendNTS(self, message):
         sanitizedMessage, changes = self.sanitizeMessage(message)
@@ -269,6 +271,19 @@ class SignalObj:
             return True
 
         logging.info(f"could not authenticate user with id={userId}")
+        return False
+    
+    def authenticateGroup(self, userId, grId) -> bool:
+        """
+        Check whether user has access to the group bot.
+        
+        """
+        membersDefault = self.groups[grId]["members"]
+
+        if userId in membersDefault:
+            return True
+
+        logging.info(f"could not authenticate user with id={userId} for group id={grId}")
         return False
 
     def error(self, userId, msg):
