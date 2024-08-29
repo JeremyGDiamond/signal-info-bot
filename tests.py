@@ -98,7 +98,7 @@ def testSend():
 
 def testSendGroup():
     # signal.receive()
-    signal.sendGroup(signal.config["myUserID"], signal.config["testGrId"], "bot: hardcoded test group send function")
+    signal.sendGroup(signal.config["admin"], signal.config["testGrId"], "bot: hardcoded test group send function")
     passedTestPrint("testSendGroup")
 
 def testSendNTS():

@@ -300,7 +300,8 @@ class SignalObj:
         if userId in membersDefault:
             return True
 
-        logging.info(f"could not authenticate user with id={userId} for group id={grId}")
+        logging.error(f"could not authenticate user with id={userId} for group id={grId}")
+        logging.error(f"membersDefault {membersDefault}")
         return False
 
     
