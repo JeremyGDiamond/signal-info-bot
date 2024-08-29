@@ -2,6 +2,18 @@ import signalpy
 import subprocess
 import json
 import time
+import logging
+
+
+#configure logger to write to console and file
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.FileHandler("debug.log"),
+        logging.StreamHandler()
+    ]
+)
 
 signal = signalpy.SignalObj("config.json")
 
@@ -24,7 +36,7 @@ def main():
     # while True:
     #     # signal.receive()
     #     signal.parseReceive()
-    #     print("receieve run")
+    #     logging.info("receieve run")
 
 
         

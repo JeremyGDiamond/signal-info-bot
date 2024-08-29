@@ -5,3 +5,7 @@ config.json
 testConfig.json
 
 testcommands.txt
+
+debug.log
+testsDebug.log
+signalpyDebug.log

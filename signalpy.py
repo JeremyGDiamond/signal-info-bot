@@ -3,7 +3,17 @@ import json
 import re
 import time
 import logging
-import pprint
+
+
+#configure logger to write to console and file
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.FileHandler("signalpyDebug.log"),
+        logging.StreamHandler()
+    ]
+)
 
 ACTIVE_REFRESH = 60 * 5  # Max sec between active refresh (with interaction) TODO discuss: placeholder
 PASSIVE_REFRESH = 60 * 60  # Max sec between passive refresh (without any interaction) TODO discuss: placeholder
@@ -120,7 +130,7 @@ class SignalObj:
                 self.config["groups"][grIdDefault]["welcomeMessage"] = ""
                 self.config["groups"][grIdDefault]["commands"] = {}
 
-            # print(self.config)
+            
 
     def validateConfigGroups(self):
         """
@@ -411,8 +421,7 @@ class SignalObj:
         #list of touples command and groups
         commandList = []
         groupJoins = []
-        # pp = pprint.PrettyPrinter()
-        # print(output)
+        
 
         # todo dms to command list
 

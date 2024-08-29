@@ -4,13 +4,22 @@ import json
 import time
 import logging
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.FileHandler("testsDebug.log"),
+        logging.StreamHandler()
+    ]
+)
+
 signal = signalpy.SignalObj("testConfig.json")
 
 def passedTestPrint(name):
-    logging.alert(f"TEST:{name} PASSED")
+    logging.info(f"TEST:{name} PASSED")
 
 def failedTestPrint(name, msg):
-    logging.alert(f"TEST:{name} FAILED, {msg}")
+    logging.info(f"TEST:{name} FAILED, {msg}")
 
 # test init
 
@@ -149,7 +158,7 @@ def testParseReceive():
 
 def main():
     
-    logging.alert("signalpi Tests")
+    logging.info("signalpi Tests")
 
     # san tests
     passSan()
