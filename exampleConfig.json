@@ -5,7 +5,7 @@
     "testGrId" : "",
     "default": "gr1id",
     "groups" : {
-        "gr1id" : {
+        "grid" : {
             "welcomeMessage" : "#bot test Welcome message",
             "commands" : {
                 "test" : "#bot test command from config"

@@ -67,9 +67,10 @@ class SignalObj:
         # send an error if there were any changes
         if changes != 0:
             
-            errorMessage = f"sanitizer caught {changes} changes see long"
+            errorMessage = f"Error: sanitizer caught {changes} changes see long"
             logging.error(f"sanitizer caught {changes} msg: {message}")
-            self.error(self.config[admin], errorMessage)
+            
+            self.adminAlert(errorMessage)
         
         return newMessage, changes
     
@@ -241,7 +242,7 @@ class SignalObj:
         if self.config["noteToSelfMode"]:
             self.sendNTS(adminAlertMessage)
         else:
-            self.send(self.config["testDmId"], adminAlertMessage)
+            self.send(self.config["admin"], adminAlertMessage)
 
     def getGroupMembers(self, grId):
         self.genGroups()
@@ -287,9 +288,7 @@ class SignalObj:
         logging.info(f"could not authenticate user with id={userId} for group id={grId}")
         return False
 
-    def error(self, userId, msg):
-        self.send(userId, f"ERROR: {msg}")
-
+    
     def sendWelcome(self, userId, grId):
         members = self.getGroupMembers(grId)
 

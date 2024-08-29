@@ -63,12 +63,21 @@ def passSan(): #TODO alpha
 
 
 def failEachBlockedChar(): #TODO alpha
+    message = "~!@#$%^&*())))))_+`-=\u0009\\{\\}|[]\\;'\"<>?/"
+    sanitizedMessage, changes = signal.sanitizeMessage(message)
+    if changes != len(message) and len(sanitizedMessage) != 0:
+        print(changes, len(message), len(sanitizedMessage))
+        failedTestPrint("failEachBlockedChar", "blocked char mismatch")
+        return
+    
+    passedTestPrint("failEachBlockedChar")
+
+    
+
+def failEachBlockedStrings(): #TODO beta
     pass
 
-def failEachBlockedStrings(): #TODO alpha
-    pass
-
-def failEachTestCommand(): #TODO alpha
+def failEachTestCommand(): #TODO beta
     pass
 
 # test signal funcs
@@ -139,6 +148,7 @@ def main():
 
     # san tests
     passSan()
+    failEachBlockedChar()
 
 
     # print(signal.helps)
