@@ -2,14 +2,15 @@ import signalpy
 import subprocess
 import json
 import time
+import logging
 
 signal = signalpy.SignalObj("testConfig.json")
 
 def passedTestPrint(name):
-    print(f"TEST:{name} PASSED")
+    logging.alert(f"TEST:{name} PASSED")
 
 def failedTestPrint(name, msg):
-    print(f"TEST:{name} FAILED, {msg}")
+    logging.alert(f"TEST:{name} FAILED, {msg}")
 
 # test init
 
@@ -66,7 +67,7 @@ def failEachBlockedChar(): #TODO alpha
     message = "~!@#$%^&*())))))_+`-=\u0009\\{\\}|[]\\;'\"<>?/"
     sanitizedMessage, changes = signal.sanitizeMessage(message)
     if changes != len(message) and len(sanitizedMessage) != 0:
-        print(changes, len(message), len(sanitizedMessage))
+        logging.error(changes, len(message), len(sanitizedMessage))
         failedTestPrint("failEachBlockedChar", "blocked char mismatch")
         return
     
@@ -83,15 +84,18 @@ def failEachTestCommand(): #TODO beta
 # test signal funcs
 def testSend():
     # signal.receive()
-    signal.send(signal.config["testDmId"], "#bot hardcoded test send function")
+    signal.send(signal.config["testDmId"], "bot: hardcoded test send function")
+    passedTestPrint("testSend")
 
 def testSendGroup():
     # signal.receive()
-    signal.sendGroup(signal.config["testGrId"], "#bot hardcoded test group send function")
+    signal.sendGroup(signal.config["myUserID"], signal.config["testGrId"], "bot: hardcoded test group send function")
+    passedTestPrint("testSendGroup")
 
 def testSendNTS():
     # signal.receive()
-    signal.sendNTS(signal.config["testDmId"], "#bot hardcoded test sendNTS function")
+    signal.sendNTS("bot: hardcoded test sendNTS function")
+    passedTestPrint("testSendNTS")
 
 def testListGroups(): #TODO alpha
     pass
@@ -100,7 +104,8 @@ def testListGroups(): #TODO alpha
 # test bot behaviors
 def testAdminAlert():
     # signal.receive()
-    signal.adminAlert("#bot test admin alert")
+    signal.adminAlert("bot: test admin alert")
+    passedTestPrint("testAdminAlert")
 
 def testGetGroupMembers(): #TODO alpha
     pass
@@ -144,18 +149,20 @@ def testParseReceive():
 
 def main():
     
-    print("signalpi Tests")
+    logging.alert("signalpi Tests")
 
     # san tests
     passSan()
     failEachBlockedChar()
 
+    # send tests
 
-    # print(signal.helps)
+    testSend()
+    testSendGroup()
+    testSendNTS()
+    testAdminAlert()
 
-    # testSend()
-    # testSendGroup()
-    # testAdminAlert()
+
     # testParseReceive()
     # testGetGroupInfo()
     

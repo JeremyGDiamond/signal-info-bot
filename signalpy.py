@@ -80,7 +80,7 @@ class SignalObj:
             if len(sanitizedMessage) != 0:
                 subprocess.run(["signal-cli", "send", userId, "-m", sanitizedMessage], shell=False)
         
-    def sendGroup(self, grId, message):
+    def sendGroup(self, userId, grId, message):
         # TODO alpha authenticate group?
 
         if self.authenticateGroup(userId, grId):
@@ -178,7 +178,7 @@ class SignalObj:
             # Deal with inactive groups
             if active == "false":
                 # TODO COMMMENT OUT THE FOLLOWING LINE WHEN TESTING WITH PERSONAL ACCOUNT
-                # self.activateGroup(grId) #TODO uncomment when running for real
+                # self.activateGroup(userid, grId) #TODO uncomment when running for real
                 continue
 
             # Skip invalid groups
@@ -263,11 +263,16 @@ class SignalObj:
     def authenticate(self, userId) -> bool:
         """
         Check whether user has access to bot.
+
+        NOTE: this bakes if the user is in your contact list and you use ACIin the config file
+
         TODO discuss: when does a user have access to the bot?
                         For now: has to be member of the default group.
         """
         configGrId = self.config["default"]
         membersDefault = self.groups[configGrId]["members"]
+
+        
 
         if userId in membersDefault:
             return True
@@ -300,9 +305,9 @@ class SignalObj:
         Sends a message to the given group to make it active again.
         Groups become inactive when there has been no activity for a certain period of time.
         """
-        activationMsg = "#bot This is an activation message, you can ignore it."
+        activationMsg = "bot: This is an activation message, you can ignore it."
 
-        self.sendGroup(grId, activationMsg)
+        self.sendGroup(userId, grId, activationMsg)
 
     def sendHelp(self, userId, grId):
         members = self.getGroupMembers(grId)
