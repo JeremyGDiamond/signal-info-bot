@@ -18,7 +18,7 @@ logging.basicConfig(
 signal = signalpy.SignalObj("config.json", "debug.log")
 
 def main():
-    print("Bot alive")
+    logging.info("Bot alive")
     
     while True:
         # signal.receive()
