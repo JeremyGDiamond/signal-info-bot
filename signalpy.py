@@ -12,14 +12,14 @@ assert ACTIVE_REFRESH < PASSIVE_REFRESH
 baseHelpMessage = "\
 To use this bot send a command followed by a group name\n\
 \n\
-example: help group I'm in\n\
+example: help group I am in\n\
 \n\
 If no group is given the default group is used\n\
 \n\
 ---Command List---\n\
-  help: show this message for the group\n\
-  welcome: show welcome message again\n\
-  default: show the default group name"
+help: show this message for the group\n\
+welcome: show welcome message again\n\
+default: show the default group name"
 
 def loggerConfig(logFileName):
     #configure logger to write to console and file
@@ -69,9 +69,15 @@ class SignalObj:
             elif c == " ":
                 newMessage += "\u2008"
             elif c == ":":
-                newMessage += "\u02F8"
+                newMessage += " \u02F8"
             elif c == ",":
                 newMessage += "\u201A"
+            elif c == "\"":
+                newMessage += "\uFF02"
+            elif c == "-":
+                newMessage += "\u2013"
+            elif c == "\n":
+                newMessage += "\n"
             else:
                 changes = changes+1
             
@@ -175,7 +181,9 @@ class SignalObj:
 
         group_re = r"(.+) Name: (.+) Description: (.|\n)* Active: (true|false) .+ Members: (\[.*\]) Pending members: .+ Admins: (\[.*\]) Banned: "
         new_groups = {}
+        welcomes = {}
         for res_group in res_groups:
+            
             if res_group.strip() == "": continue
 
             re_res = re.search(group_re, res_group)
@@ -183,7 +191,6 @@ class SignalObj:
                 logging.warning(f"could not parse group \"{res_group}\"")
                 continue
             grId, name, _, active, members, admins = re_res.groups()
-
             # Only process groups that are in config
             if grId not in self.config["groups"].keys():
                 continue
@@ -191,7 +198,7 @@ class SignalObj:
             # Deal with inactive groups
             if active == "false":
                 # TODO COMMMENT OUT THE FOLLOWING LINE WHEN TESTING WITH PERSONAL ACCOUNT
-                # self.activateGroup(userid, grId) #TODO uncomment when running for real
+                self.activateGroup(userid, grId) #TODO uncomment when running for real
                 continue
 
             # Skip invalid groups
@@ -206,16 +213,12 @@ class SignalObj:
                 logging.error(f"bot has access to multiple groups with name={name}")
                 continue
                 # TODO: how to handle this, now only the first group is handled.
-
+            new_members = {}
             if grId in self.groups.keys():
                 # Send welcome message to new members
                 new_members = set(members) - set(self.groups[grId]["members"])
-                if self.config["groups"][grId]["welcomeMessage"] != "":
-                    for new_member in new_members:
-                        self.sendWelcome(new_member, grId)
-                else:
-                    logging.info(f"did not send {len(new_members)} welcome message for group {name} with id={grId} because welcome message is empty")
-
+                welcomes[grId] = new_members
+                
             new_groups[grId] = {
                 "name": name,
                 "members": members,
@@ -229,6 +232,14 @@ class SignalObj:
             logging.info(f"bot has lost access to group {grName} with id={grId}")
 
         self.groups = new_groups
+
+        for grId, new_members in welcomes.items():
+            if self.config["groups"][grId]["welcomeMessage"] != "":
+                for new_member in new_members:
+                    self.sendWelcome(new_member, grId)
+            else:
+                logging.info(f"did not send {len(new_members)} welcome message for group {name} with id={grId} because welcome message is empty")
+
     
     def genHelps(self):
         """Generates the help text for each group based on its commands."""
@@ -306,11 +317,10 @@ class SignalObj:
         return False
     
     def sendError(self, userId, msg):
-       self.send(userId, f"ERROR\u02F8 {msg}")
+       self.send(userId, f"ERROR: {msg}")
     
     def sendWelcome(self, userId, grId):
         members = self.getGroupMembers(grId)
-
         if userId in members:
             self.send(userId, self.config["groups"][grId]["welcomeMessage"])
 
@@ -356,12 +366,12 @@ class SignalObj:
                     grId = id
 
             if grId is None:
-                self.sendError(userId, f"cannot find group with name '{grName}'.")
+                self.sendError(userId, f"cannot find group with name \"{grName}\".")
                 return
 
         members = self.getGroupMembers(grId)
         if members is None or userId not in members:
-            self.sendError(userId, f"cannot find group with name '{grName}'.")
+            self.sendError(userId, f"cannot find group with name \"{grName}\".")
             return
 
         cmd = msg[0].lower().strip()
@@ -372,13 +382,13 @@ class SignalObj:
         elif cmd == "welcome":
             self.sendWelcome(userId, grId)
         elif cmd not in self.config["groups"][grId]["commands"]:
-            self.sendError(userId, f"do not know command '{cmd}' for group '{grName}'. Try help to get all possible commands.")
+            self.sendError(userId, f"do not know command \"{cmd}\" for group \"{grName}\". Try help to get all possible commands.")
         else:
             res = self.config["groups"][grId]["commands"][cmd]
             self.send(userId, res)
 
     def processMsg(self, msg: str):
-        if msg == "": return
+        if msg == "": return None
         # Skip group messages
         if "Group info:\n" in msg: return None
 
@@ -395,7 +405,7 @@ class SignalObj:
             return None
 
         if not self.authenticate(senderId):
-            return
+            return None
 
         # TODO: messages containing these words are skipped now, change this
         ignoreTypes = ["Group call update", "Reaction"]
@@ -406,37 +416,30 @@ class SignalObj:
         cannotHandleTypes = ["Attachment", "Contacts", "Sticker", "Story reply"] # Story reply seems to be picture, location, audio?
         for cannotHandleType in cannotHandleTypes:
             if f"{cannotHandleType}:\n" in msg:
-                # self.sendError(senderId, "I cannot handle this message type") # TODO uncomment
+                self.sendError(senderId, "I cannot handle this message type") # TODO uncomment
                 return None
 
         if "Body: " not in msg:
             return None
 
         # TODO: multi-line messages (see ReceiveMesageHandler.printDataMessage)
-        body = self.sanitizeMessage(msg.split("Body: ")[1].split("\n")[0])
+        body = msg.split("Body: ")[1].split("\n")[0]
         logging.debug(f"received msg from {senderId}: {body}")
 
         self.handleCmd(senderId, body)
+    
+    
 
     def parseReceive(self):
         rcv_stdout = self.receive().stdout
         if rcv_stdout.strip() == "":
             return
         # TODO: uncomment. When you receive after a long time of not receiving, I'm pretty sure you'll receive everything since the last time, so don't uncomment following two lines before running once without them
-        # for msg in rcv_stdout.split("Envelope from:"):
-        #     self.processMsg(msg)
-
-        directMessages = []
-
-        #list of touples command and groups
-        commandList = []
-        groupJoins = []
-        
-
-        # todo dms to command list
+        for msg in rcv_stdout.split("Envelope from:"):
+            self.processMsg(msg)
 
         # Passive refresh
         if self.groupsTimeStamp - time.time() > PASSIVE_REFRESH:
             self.genGroups()
 
-        return commandList, groupJoins
+        return

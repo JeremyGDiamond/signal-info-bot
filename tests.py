@@ -26,8 +26,13 @@ def failedTestPrint(name, msg):
 def testReadConfig(): #TODO alpha use exmapleConfig.json
     pass
 
-def testGenGroups(): #TODO alpha use exmapleConfig.json
-    pass
+def testGenGroups(): #TODO alpha
+    signal.receive()
+    logging.info(f"Add someone to the test group now to test new member welcome messages")
+    time.sleep(60 * 2) #change active refresh to make this work
+    signal.receive()
+    signal.genGroups()
+    passedTestPrint("testGenGroups")
 
 def testValidateConfigGroups(): #TODO alpha use exmapleConfig.json
     pass
@@ -73,7 +78,7 @@ def passSan():
 
 
 def failEachBlockedChar(): #TODO alpha
-    message = "~!@#$%^&*())))))_+`-=\u0009\\{\\}|[]\\;'\"<>?/"
+    message = "~!@#$%^&*())))))_+`=\u0009\\{\\}|[]\\;'<>?/"
     sanitizedMessage, changes = signal.sanitizeMessage(message)
     if changes != len(message) and len(sanitizedMessage) != 0:
         logging.error(changes, len(message), len(sanitizedMessage))
@@ -137,9 +142,9 @@ def testGetGroupAdmins():
         return
     failedTestPrint("testGetGroupAdmins")
 
-def testError():
-    signal.error(signal.config["admin"], "bot: hardcoded test of the error function")
-    passedTestPrint("testError")
+def testSendError():
+    signal.sendError(signal.config["admin"], "bot: hardcoded test of the error function")
+    passedTestPrint("testSendError")
 
 def testAuth():
     if signal.authenticate(signal.config["admin"]):
@@ -177,12 +182,22 @@ def testHandleCmd(): #TODO all code path tests
     signal.handleCmd(signal.config["testDmId"], "error")
     passedTestPrint("testHandleCmd")
 
-def testProcessMsg(): #TODO alpha
-    pass
+def testProcessMsg(): #TODO add all paths
+    # empty message
+    signal.processMsg("")
+    # no sender id
+    signal.processMsg(signal.config["testInvalidMessage"])
+    # group info
+    # ignore types
+    # cannot handel types
+    # no body
+    # working message
+    signal.processMsg(signal.config["testValidMessage"])
+    passedTestPrint("testProcessMsg")
 
 def testParseReceive():
-    pass
-    # signal.parseReceive()
+    signal.parseReceive()
+    passedTestPrint("testParseReceive")
 
 
 
@@ -192,32 +207,35 @@ def main():
     
     logging.info("signalpi Tests")
 
-    # # san tests
-    # passSan()
-    # failEachBlockedChar()
+    # init tests
+    # testGenGroups()
 
-    # # send receive and list groups tests
-    # testSend()
-    # testSendGroup()
-    # testSendNTS()
-    # testAdminAlert()
-    # testReceive()
-    # testListGroups()
+    # san tests
+    passSan()
+    failEachBlockedChar()
 
-    # # group info tests
-    # testGetGroupMembers()
-    # testGetGroupAdmins()
+    # send receive and list groups tests
+    testSend()
+    testSendGroup()
+    testSendNTS()
+    testAdminAlert()
+    testReceive()
+    testListGroups()
 
-    # #test error and auth
-    # testError()
-    # testAuth()
-    # testAuthGroup()
+    # group info tests
+    testGetGroupMembers()
+    testGetGroupAdmins()
+
+    #test error and auth
+    testSendError()
+    testAuth()
+    testAuthGroup()
 
     #test messege sends
-    # testSendWelcome()
-    # testActivateGroup()
-    # testSendHelp()
-    # testSendDefault()
+    testSendWelcome()
+    testActivateGroup()
+    testSendHelp()
+    testSendDefault()
 
     # test cmd message, and receive parsing
     testHandleCmd()
@@ -225,10 +243,5 @@ def main():
     testParseReceive()
     
     
-    
-    
-
-
-
 if __name__ == "__main__":
     main()
