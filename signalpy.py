@@ -302,7 +302,7 @@ class SignalObj:
         logging.error(f"membersDefault {membersDefault}")
         return False
 
-    def error(self, userId, msg):
+    def sendError(self, userId, msg):
         self.send(userId, f"ERROR\u02F8 {msg}")
 
     def sendWelcome(self, userId, grId):
@@ -341,7 +341,7 @@ class SignalObj:
             try:
                 grName = self.groups[grId]["name"]
             except KeyError:  # Bot does not have access to group
-                self.error(userId, "sorry I'm having some problems, please specify a group name.")
+                self.sendError(userId, "sorry I'm having some problems, please specify a group name.")
                 logging.error(f"bot does not have access to default group with id={grId}")
                 # TODO: alert admin?
         else:
@@ -353,12 +353,12 @@ class SignalObj:
                     grId = id
 
             if grId is None:
-                self.error(userId, f"cannot find group with name '{grName}'.")
+                self.sendError(userId, f"cannot find group with name '{grName}'.")
                 return
 
         members = self.getGroupMembers(grId)
         if members is None or userId not in members:
-            self.error(userId, f"cannot find group with name '{grName}'.")
+            self.sendError(userId, f"cannot find group with name '{grName}'.")
             return
 
         cmd = msg[0].lower().strip()
@@ -369,7 +369,7 @@ class SignalObj:
         elif cmd == "welcome":
             self.sendWelcome(userId, grId)
         elif cmd not in self.config["groups"][grId]["commands"]:
-            self.error(userId, f"do not know command '{cmd}' for group '{grName}'. Try help to get all possible commands.")
+            self.sendError(userId, f"do not know command '{cmd}' for group '{grName}'. Try help to get all possible commands.")
         else:
             res = self.config["groups"][grId]["commands"][cmd]
             self.send(userId, self.sanitizeMessage(res))
