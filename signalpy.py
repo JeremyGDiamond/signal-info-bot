@@ -272,12 +272,10 @@ class SignalObj:
 
     def authenticate(self, userId) -> bool:
         """
-        Check whether user has access to bot.
+        Check whether user has access to bot, i.e. is a member if the default
+        group.
 
         NOTE: this bakes if the user is in your contact list and you use ACIin the config file
-
-        TODO discuss: when does a user have access to the bot?
-                        For now: has to be member of the default group.
         """
         configGrId = self.config["default"]
         membersDefault = self.groups[configGrId]["members"]
@@ -304,7 +302,9 @@ class SignalObj:
         logging.error(f"membersDefault {membersDefault}")
         return False
 
-    
+    def error(self, userId, msg):
+        self.send(userId, f"ERROR\u02F8 {msg}")
+
     def sendWelcome(self, userId, grId):
         members = self.getGroupMembers(grId)
 
@@ -380,6 +380,12 @@ class SignalObj:
         if "Group info:\n" in msg: return None
 
         try:
+            # Extracts user ID from message, searches for a space, then the username
+            # (“.+” in the regex) followed by a space and the user ID (which can
+            # be a user's phone number) of the sender made up of numbers, 
+            # lowercase letters, - and + ([0-9a-z\-\+]+ in the regex), followed by
+            # (device:.
+            # Example: " “user123 (some info)” x1z345a6-789b-1234-c56d-7891e2fg345h (device: "
             senderId = re.search(r' .+ ([0-9a-z\-\+]+) \(device: ', msg)[1]
         except TypeError:
             logging.error(f"could not parse message, could not find sender ID, message=\"{msg}\"")
