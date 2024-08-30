@@ -61,7 +61,7 @@ class SignalObj:
         changes = 0
         newMessage = ""
 
-        for c in message:
+        for c in message: #TODO alpha add " and - confuseables and split messages to multiline
             if c.isalnum():
                 newMessage += c
             elif c == ".":
@@ -80,7 +80,7 @@ class SignalObj:
         # send an error if there were any changes
         if changes != 0:
             
-            errorMessage = f"Error: sanitizer caught {changes} changes see long"
+            errorMessage = f"Error: sanitizer caught {changes} changes see log"
             logging.error(f"sanitizer caught {changes} msg: {message}")
             
             self.adminAlert(errorMessage)
@@ -314,7 +314,7 @@ class SignalObj:
         if userId in members:
             self.send(userId, self.config["groups"][grId]["welcomeMessage"])
 
-    def activateGroup(self, grId):
+    def activateGroup(self, userId, grId):
         """
         Sends a message to the given group to make it active again.
         Groups become inactive when there has been no activity for a certain period of time.
@@ -375,7 +375,7 @@ class SignalObj:
             self.sendError(userId, f"do not know command '{cmd}' for group '{grName}'. Try help to get all possible commands.")
         else:
             res = self.config["groups"][grId]["commands"][cmd]
-            self.send(userId, self.sanitizeMessage(res))
+            self.send(userId, res)
 
     def processMsg(self, msg: str):
         if msg == "": return

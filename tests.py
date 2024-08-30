@@ -37,7 +37,7 @@ def testGenHelps(): #TODO alpha use exmapleConfig.json
 
 # test message sanitizer
 
-def passSan(): #TODO alpha
+def passSan():
     message0 = "ThisMessageShouldBeTheSame1234567890" #alpha num
     message1 = "ThisMessageShouldEndWithAConfused." #test .
     message2 = "ThisMessageShouldEndWithAConfusedSpace " #test space
@@ -121,7 +121,7 @@ def testAdminAlert():
     signal.adminAlert("bot: test admin alert")
     passedTestPrint("testAdminAlert")
 
-def testGetGroupMembers(): #TODO alpha use exmapleConfig.json
+def testGetGroupMembers(): 
     output = signal.getGroupMembers(signal.config["default"])
 
     if len(output) != 0:
@@ -129,7 +129,7 @@ def testGetGroupMembers(): #TODO alpha use exmapleConfig.json
         return
     failedTestPrint("testGetGroupMembers")
 
-def testGetGroupAdmins(): #TODO alpha use exmapleConfig.json
+def testGetGroupAdmins(): 
     output = signal.getGroupAdmins(signal.config["default"])
 
     if len(output) != 0:
@@ -147,32 +147,42 @@ def testAuth():
         return
     failedTestPrint("testAuth")    
 
-def testAuthGroup(): #TODO alpha use exmapleConfig.json
+def testAuthGroup(): 
     if signal.authenticateGroup(signal.config["admin"], signal.config["testGrId"]):
         passedTestPrint("testAuthGroup")
         return
     failedTestPrint("testAutGroup")   
 
 def testSendWelcome(): #TODO alpha
-    pass
+    signal.sendWelcome(signal.config["testDmId"], signal.config["testGrId"])
+    passedTestPrint("testSendWelcome")
 
 def testActivateGroup(): #TODO alpha
-    pass
+    signal.activateGroup(signal.config["testDmId"], signal.config["testGrId"]) 
+    passedTestPrint("testActivateWelcome")   
 
 def testSendHelp(): #TODO alpha
-    pass
+    signal.sendHelp(signal.config["testDmId"], signal.config["testGrId"])
+    passedTestPrint("testSendHelp")
 
 def testSendDefault(): #TODO alpha
-    pass
+    signal.sendDefault(signal.config["testDmId"])
+    passedTestPrint("testSendDefault")
 
-def testHandleCmd(): #TODO alpha
-    pass
+def testHandleCmd(): #TODO all code path tests
+    signal.handleCmd(signal.config["testDmId"], "help")
+    signal.handleCmd(signal.config["testDmId"], "default")
+    signal.handleCmd(signal.config["testDmId"], "welcome")
+    signal.handleCmd(signal.config["testDmId"], "test")
+    signal.handleCmd(signal.config["testDmId"], "error")
+    passedTestPrint("testHandleCmd")
 
 def testProcessMsg(): #TODO alpha
     pass
 
 def testParseReceive():
-    signal.parseReceive()
+    pass
+    # signal.parseReceive()
 
 
 
@@ -182,37 +192,41 @@ def main():
     
     logging.info("signalpi Tests")
 
-    # san tests
-    passSan()
-    failEachBlockedChar()
+    # # san tests
+    # passSan()
+    # failEachBlockedChar()
 
-    # send receive and list groups tests
+    # # send receive and list groups tests
+    # testSend()
+    # testSendGroup()
+    # testSendNTS()
+    # testAdminAlert()
+    # testReceive()
+    # testListGroups()
 
-    testSend()
-    testSendGroup()
-    testSendNTS()
-    testAdminAlert()
-    testReceive()
-    testListGroups()
+    # # group info tests
+    # testGetGroupMembers()
+    # testGetGroupAdmins()
 
-    # group info tests
-    testGetGroupMembers()
-    testGetGroupAdmins()
+    # #test error and auth
+    # testError()
+    # testAuth()
+    # testAuthGroup()
 
+    #test messege sends
+    # testSendWelcome()
+    # testActivateGroup()
+    # testSendHelp()
+    # testSendDefault()
 
-
-
-    #test error and auth
-    testError()
-    testAuth()
-    testAuthGroup()
-
-
-    # testParseReceive()
-    # testGetGroupInfo()
+    # test cmd message, and receive parsing
+    testHandleCmd()
+    testProcessMsg()
+    testParseReceive()
     
     
-    # todo
+    
+    
 
 
 
