@@ -305,7 +305,7 @@ class SignalObj:
         logging.error(f"membersDefault {membersDefault}")
         return False
     
-    def error(self, userId, msg):
+    def sendError(self, userId, msg):
        self.send(userId, f"ERROR\u02F8 {msg}")
     
     def sendWelcome(self, userId, grId):
@@ -406,7 +406,7 @@ class SignalObj:
         cannotHandleTypes = ["Attachment", "Contacts", "Sticker", "Story reply"] # Story reply seems to be picture, location, audio?
         for cannotHandleType in cannotHandleTypes:
             if f"{cannotHandleType}:\n" in msg:
-                # self.error(senderId, "I cannot handle this message type") # TODO uncomment
+                # self.sendError(senderId, "I cannot handle this message type") # TODO uncomment
                 return None
 
         if "Body: " not in msg:
