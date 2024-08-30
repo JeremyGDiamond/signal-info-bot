@@ -5,16 +5,6 @@ import time
 import logging
 
 
-#configure logger to write to console and file
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[
-        logging.FileHandler("signalpyDebug.log"),
-        logging.StreamHandler()
-    ]
-)
-
 ACTIVE_REFRESH = 60 * 5  # Max sec between active refresh (with interaction) TODO discuss: placeholder
 PASSIVE_REFRESH = 60 * 60  # Max sec between passive refresh (without any interaction) TODO discuss: placeholder
 assert ACTIVE_REFRESH < PASSIVE_REFRESH
@@ -31,11 +21,24 @@ If no group is given the default group is used\n\
   welcome: show welcome message again\n\
   default: show the default group name"
 
+def loggerConfig(logFileName):
+    #configure logger to write to console and file
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(message)s",
+        handlers=[
+            logging.FileHandler(logFileName),
+            logging.StreamHandler()
+        ]
+    )
+
 
 # signal class
 class SignalObj:
 
-    def __init__(self, configFileName):
+    def __init__(self, configFileName, logFileName):
+        loggerConfig(logFileName)
+
         self.config = {}
         self.configFileName = configFileName
         self.readconfig()
@@ -50,7 +53,7 @@ class SignalObj:
 
         self.commandInjectionBlockChars = []
         self.commandInjectionBlockStrings = []
-
+    
     # needed becuse of shell injections
     def sanitizeMessage(self, message):
         
@@ -301,10 +304,10 @@ class SignalObj:
         logging.error(f"could not authenticate user with id={userId} for group id={grId}")
         logging.error(f"membersDefault {membersDefault}")
         return False
-
-    def sendError(self, userId, msg):
-        self.send(userId, f"ERROR\u02F8 {msg}")
-
+    
+    def error(self, userId, msg):
+       self.send(userId, f"ERROR\u02F8 {msg}")
+    
     def sendWelcome(self, userId, grId):
         members = self.getGroupMembers(grId)
 

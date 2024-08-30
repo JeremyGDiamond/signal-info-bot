@@ -13,7 +13,7 @@ logging.basicConfig(
     ]
 )
 
-signal = signalpy.SignalObj("testConfig.json")
+signal = signalpy.SignalObj("testConfig.json", "testsDebug.log")
 
 def passedTestPrint(name):
     logging.info(f"TEST:{name} PASSED")
@@ -23,16 +23,16 @@ def failedTestPrint(name, msg):
 
 # test init
 
-def testReadConfig(): #TODO alpha
+def testReadConfig(): #TODO alpha use exmapleConfig.json
     pass
 
-def testGenGroups(): #TODO alpha
+def testGenGroups(): #TODO alpha use exmapleConfig.json
     pass
 
-def testValidateConfigGroups(): #TODO alpha
+def testValidateConfigGroups(): #TODO alpha use exmapleConfig.json
     pass
 
-def testGenHelps(): #TODO alpha
+def testGenHelps(): #TODO alpha use exmapleConfig.json
     pass
 
 # test message sanitizer
@@ -106,30 +106,52 @@ def testSendNTS():
     signal.sendNTS("bot: hardcoded test sendNTS function")
     passedTestPrint("testSendNTS")
 
-def testListGroups(): #TODO alpha
-    pass
+def testReceive(): #TODO check ret codes and contents 
+    output = signal.receive()
+    logging.info(output)
+    passedTestPrint("testReceive")
 
+def testListGroups(): #TODO check ret codes and contents
+    output = signal.listGroups()
+    logging.info(output)
+    passedTestPrint("testListGroups")
 
 # test bot behaviors
 def testAdminAlert():
-    # signal.receive()
     signal.adminAlert("bot: test admin alert")
     passedTestPrint("testAdminAlert")
 
-def testGetGroupMembers(): #TODO alpha
-    pass
+def testGetGroupMembers(): #TODO alpha use exmapleConfig.json
+    output = signal.getGroupMembers(signal.config["default"])
 
-def testGetGroupAdmins(): #TODO alpha
-    pass
+    if len(output) != 0:
+        passedTestPrint("testGetGroupMembers")
+        return
+    failedTestPrint("testGetGroupMembers")
 
-def testError(): #TODO alpha
-    pass
+def testGetGroupAdmins(): #TODO alpha use exmapleConfig.json
+    output = signal.getGroupAdmins(signal.config["default"])
 
-def testAuth(): #TODO alpha
-    pass
+    if len(output) != 0:
+        passedTestPrint("testGetGroupAdmins")
+        return
+    failedTestPrint("testGetGroupAdmins")
 
-def testAuthGroup(): #TODO alpha
-    pass
+def testError():
+    signal.error(signal.config["admin"], "bot: hardcoded test of the error function")
+    passedTestPrint("testError")
+
+def testAuth():
+    if signal.authenticate(signal.config["admin"]):
+        passedTestPrint("testAuth")
+        return
+    failedTestPrint("testAuth")    
+
+def testAuthGroup(): #TODO alpha use exmapleConfig.json
+    if signal.authenticateGroup(signal.config["admin"], signal.config["testGrId"]):
+        passedTestPrint("testAuthGroup")
+        return
+    failedTestPrint("testAutGroup")   
 
 def testSendWelcome(): #TODO alpha
     pass
@@ -164,12 +186,26 @@ def main():
     passSan()
     failEachBlockedChar()
 
-    # send tests
+    # send receive and list groups tests
 
     testSend()
     testSendGroup()
     testSendNTS()
     testAdminAlert()
+    testReceive()
+    testListGroups()
+
+    # group info tests
+    testGetGroupMembers()
+    testGetGroupAdmins()
+
+
+
+
+    #test error and auth
+    testError()
+    testAuth()
+    testAuthGroup()
 
 
     # testParseReceive()
