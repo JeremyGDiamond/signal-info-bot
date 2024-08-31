@@ -399,7 +399,7 @@ class SignalObj:
             # lowercase letters, - and + ([0-9a-z\-\+]+ in the regex), followed by
             # (device:.
             # Example: " “user123 (some info)” x1z345a6-789b-1234-c56d-7891e2fg345h (device: "
-            senderId = re.search(r' .+ ([0-9a-z\-\+]+) \(device: ', msg)[1]
+            senderId = re.search(r' “.+” ([0-9a-z\-\+]+) \(device: ', msg)[1]
         except TypeError:
             logging.error(f"could not parse message, could not find sender ID, message=\"{msg}\"")
             return None
