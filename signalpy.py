@@ -61,7 +61,7 @@ class SignalObj:
         changes = 0
         newMessage = ""
 
-        for c in message: #TODO alpha add " and - confuseables and split messages to multiline
+        for c in message: 
             if c.isalnum():
                 newMessage += c
             elif c == ".":
@@ -255,7 +255,7 @@ class SignalObj:
             for commKey, commValue in value["commands"].items():
                 cutOff = ""
                 if len(commValue) > 50:
-                    cutOff = "[...]"
+                    cutOff = "..."
                 grHelp = grHelp + "\n  " + commKey + ": " + commValue[:50] + cutOff
 
             self.helps[grId] = grHelp
@@ -366,12 +366,12 @@ class SignalObj:
                     grId = id
 
             if grId is None:
-                self.sendError(userId, f"cannot find group with name \"{grName}\".")
+                self.sendError(userId, f"cannot find group with that name.")
                 return
 
         members = self.getGroupMembers(grId)
         if members is None or userId not in members:
-            self.sendError(userId, f"cannot find group with name \"{grName}\".")
+            self.sendError(userId, f"cannot find group with name name.")
             return
 
         cmd = msg[0].lower().strip()
@@ -382,7 +382,7 @@ class SignalObj:
         elif cmd == "welcome":
             self.sendWelcome(userId, grId)
         elif cmd not in self.config["groups"][grId]["commands"]:
-            self.sendError(userId, f"do not know command \"{cmd}\" for group \"{grName}\". Try help to get all possible commands.")
+            self.sendError(userId, f"do not know that command for this group. Try help \"group name\" to get all possible commands.")
         else:
             res = self.config["groups"][grId]["commands"][cmd]
             self.send(userId, res)
