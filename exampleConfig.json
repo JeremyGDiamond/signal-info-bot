@@ -5,11 +5,15 @@
     "testGrId" : "",
     "default": "gr1id",
     "groups" : {
-        "gr1id" : {
+        "grid" : {
             "welcomeMessage" : "#bot test Welcome message",
             "commands" : {
                 "test" : "#bot test command from config"
             }
         }
-    }
+    },
+
+    "testValidMessage" : "Envelope from: “user1” 12345-qwert-asdfg-zxcvb-67890 (device: 1) to me \n Timestamp: 0 ()\n Server timestamps: received: 2 () delivered: 6 ()\n Sent by unidentified/sealed sender\n Message timestamp: 7 ()\n Body: test\n With profile key",
+    "testInvalidMessage" : "Envelope from: “user2” )(*&^%$# (device: 1) to me \n Timestamp: 1 ()\n Server timestamps: received: 3 () delivered: 5 ()\n Sent by unidentified/sealed sender\n Message timestamp: 8 ()\n Body: test\n With profile key"
+
 }
