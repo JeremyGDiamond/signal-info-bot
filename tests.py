@@ -104,9 +104,9 @@ def testSend():
 def testSendJsonRPC():
     # signal.receive()
     print("start server")
-    time.sleep(15)
+    time.sleep(30)
     print("sending")
-    signal.sendJsonRPC(signal.config["testDmId"], "bot: hardcoded test send function")
+    signal.sendJsonRPC(signal.config["testDmId"], "bot: hardcoded test send jsonrpc function")
     passedTestPrint("testSend")
 
 def testSendGroup():
@@ -207,10 +207,6 @@ def testParseReceive():
     signal.parseReceive()
     passedTestPrint("testParseReceive")
 
-
-
-
-
 def main():
     
     logging.info("signalpi Tests")
@@ -223,7 +219,7 @@ def main():
     # failEachBlockedChar()
 
     # # send receive and list groups tests
-    testSend()
+    # testSend()
     testSendJsonRPC()
     # testSendGroup()
     # testSendNTS()

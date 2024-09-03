@@ -33,7 +33,6 @@ def loggerConfig(logFileName):
         ]
     )
 
-
 # signal class
 class SignalObj:
 
@@ -104,10 +103,41 @@ class SignalObj:
         if self.authenticate(userId):
             sanitizedMessage, changes = self.sanitizeMessage(message)
             if len(sanitizedMessage) != 0:
-                "{"
-                jsonrpc = "{\"jsonrpc\":\"2.0\",\"method\":\"send\",\"params\":{\"recipient\":["+ userId + "],\"message\":" + message +"}" + "}"
-                print(jsonrpc)
-                response = requests.post("http://127.0.0.1:8080", json=jsonrpc).json()
+                
+                jsonrpc = {"jsonrpc":"2.0","method":"send","params":{"recipient":[userId] ,"message": message}, "id": "AHHH"}
+                old = str(jsonrpc)
+                whatImSending = ""
+
+                for c in old:
+                    if c == "\'":
+                        whatImSending += "\""
+                    else:
+                        whatImSending += c
+
+                print(whatImSending)
+                import socket
+                import os
+
+                # Set the path for the Unix socket
+                socket_path = '/run/user/1002/signal-cli/socket'
+
+                # Create the Unix socket client
+                client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+
+                # Connect to the server
+                client.connect(socket_path)
+
+                # Send a message to the server
+                client.sendall(whatImSending.encode())
+
+                # Receive a response from the server
+                # response = client.recv(1024)
+                # print(f'Received response: {response.decode()}')
+
+                # Close the connection
+                client.close()
+
+                # response = requests.post("http://127.0.0.1:8080", json=jsonrpc)
         
     def sendGroup(self, userId, grId, message):
         # TODO alpha authenticate group?
