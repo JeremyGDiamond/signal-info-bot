@@ -3,6 +3,7 @@ import json
 import re
 import time
 import logging
+import requests
 
 
 ACTIVE_REFRESH = 60 * 5  # Max sec between active refresh (with interaction) TODO discuss: placeholder
@@ -98,6 +99,15 @@ class SignalObj:
             sanitizedMessage, changes = self.sanitizeMessage(message)
             if len(sanitizedMessage) != 0:
                 subprocess.run(["signal-cli", "send", userId, "-m", sanitizedMessage], shell=False)
+
+    def sendJsonRPC(self, userId, message):
+        if self.authenticate(userId):
+            sanitizedMessage, changes = self.sanitizeMessage(message)
+            if len(sanitizedMessage) != 0:
+                "{"
+                jsonrpc = "{\"jsonrpc\":\"2.0\",\"method\":\"send\",\"params\":{\"recipient\":["+ userId + "],\"message\":" + message +"}" + "}"
+                print(jsonrpc)
+                response = requests.post("http://127.0.0.1:8080", json=jsonrpc).json()
         
     def sendGroup(self, userId, grId, message):
         # TODO alpha authenticate group?

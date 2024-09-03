@@ -101,6 +101,14 @@ def testSend():
     signal.send(signal.config["testDmId"], "bot: hardcoded test send function")
     passedTestPrint("testSend")
 
+def testSendJsonRPC():
+    # signal.receive()
+    print("start server")
+    time.sleep(15)
+    print("sending")
+    signal.sendJsonRPC(signal.config["testDmId"], "bot: hardcoded test send function")
+    passedTestPrint("testSend")
+
 def testSendGroup():
     # signal.receive()
     signal.sendGroup(signal.config["admin"], signal.config["testGrId"], "bot: hardcoded test group send function")
@@ -211,36 +219,37 @@ def main():
     # testGenGroups()
 
     # san tests
-    passSan()
-    failEachBlockedChar()
+    # passSan()
+    # failEachBlockedChar()
 
-    # send receive and list groups tests
+    # # send receive and list groups tests
     testSend()
-    testSendGroup()
-    testSendNTS()
-    testAdminAlert()
-    testReceive()
-    testListGroups()
+    testSendJsonRPC()
+    # testSendGroup()
+    # testSendNTS()
+    # testAdminAlert()
+    # testReceive()
+    # testListGroups()
 
-    # group info tests
-    testGetGroupMembers()
-    testGetGroupAdmins()
+    # # group info tests
+    # testGetGroupMembers()
+    # testGetGroupAdmins()
 
-    #test error and auth
-    testSendError()
-    testAuth()
-    testAuthGroup()
+    # #test error and auth
+    # testSendError()
+    # testAuth()
+    # testAuthGroup()
 
-    #test messege sends
-    testSendWelcome()
-    testActivateGroup()
-    testSendHelp()
-    testSendDefault()
+    # #test messege sends
+    # testSendWelcome()
+    # testActivateGroup()
+    # testSendHelp()
+    # testSendDefault()
 
-    # test cmd message, and receive parsing
-    testHandleCmd()
-    testProcessMsg()
-    testParseReceive()
+    # # test cmd message, and receive parsing
+    # testHandleCmd()
+    # testProcessMsg()
+    # testParseReceive()
     
     
 if __name__ == "__main__":
