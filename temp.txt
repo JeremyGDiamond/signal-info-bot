@@ -1,1 +1,0 @@
-{"jsonrpc":"2.0","method":"send","params":{"recipient":["45f79301-45f7-4135-a229-0c33cf1e3beb"] ,"message": "echo"}, "id": "AHHH"}
