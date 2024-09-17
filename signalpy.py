@@ -4,11 +4,14 @@ import re
 import time
 import logging
 import requests
-
+import socket
+import os
 
 ACTIVE_REFRESH = 60 * 5  # Max sec between active refresh (with interaction) TODO discuss: placeholder
 PASSIVE_REFRESH = 60 * 60  # Max sec between passive refresh (without any interaction) TODO discuss: placeholder
 assert ACTIVE_REFRESH < PASSIVE_REFRESH
+
+socket.setdefaulttimeout(3)
 
 baseHelpMessage = "\
 To use this bot send a command followed by a group name\n\
@@ -38,6 +41,12 @@ class SignalObj:
 
     def __init__(self, configFileName, logFileName):
         loggerConfig(logFileName)
+        self.proc = subprocess.Popen(["pwd"], shell=False) # to set the type
+        # time.sleep(10)
+        self.socket_path = '/run/user/1002/signal-cli/socket'
+        self.client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+
+
 
         self.config = {}
         self.configFileName = configFileName
@@ -53,8 +62,42 @@ class SignalObj:
 
         self.commandInjectionBlockChars = []
         self.commandInjectionBlockStrings = []
+
+    def __del__(self):
+    # body of destructor
+        try:
+            self.client.close()
+        except:
+            logging.error("can't close client")
+        self.proc.terminate()
+        time.sleep(5)
+        
     
     # needed becuse of shell injections
+    def startServer(self):
+        logging.error("startServer Called")
+        self.proc = subprocess.Popen(["signal-cli","-a", self.config["myPhone"], "daemon", "--receive-mode", "manual", "--socket"], shell=False)
+        time.sleep(5)
+        # try:
+        # self.client.connect(self.socket_path)
+        # except:
+            # logging.error("can't connect client")
+        socket_path = '/run/user/1002/signal-cli/socket'
+        client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        client.connect(socket_path)
+        self.client = client
+
+    
+    def killServer(self):
+        logging.error("killServer called")
+        try:
+            self.client.close()
+        except:
+            logging.error("can't close client")
+
+        self.proc.terminate()
+        time.sleep(5)
+
     def sanitizeMessage(self, message):
         
         # remove offending chars
@@ -92,75 +135,118 @@ class SignalObj:
             self.adminAlert(errorMessage)
         
         return newMessage, changes
-    
+       
+    # def send(self, userId, message):
+    #     if self.authenticate(userId):
+    #         sanitizedMessage, changes = self.sanitizeMessage(message)
+    #         if len(sanitizedMessage) != 0:
+    #             subprocess.run(["signal-cli", "send", userId, "-m", sanitizedMessage], shell=False)
+
     def send(self, userId, message):
         if self.authenticate(userId):
-            sanitizedMessage, changes = self.sanitizeMessage(message)
-            if len(sanitizedMessage) != 0:
-                subprocess.run(["signal-cli", "send", userId, "-m", sanitizedMessage], shell=False)
+            if len(message) != 0:
+ 
+                jsonrpc = {"jsonrpc":"2.0","method":"send","params":{"recipient":[userId] ,"message": message}, "id": "send"}
+                whatImSending = json.dumps(jsonrpc)
 
-    def sendJsonRPC(self, userId, message):
-        if self.authenticate(userId):
-            sanitizedMessage, changes = self.sanitizeMessage(message)
-            if len(sanitizedMessage) != 0:
-                
-                jsonrpc = {"jsonrpc":"2.0","method":"send","params":{"recipient":[userId] ,"message": message}, "id": "AHHH"}
-                old = str(jsonrpc)
-                whatImSending = ""
+                self.startServer()
 
-                for c in old:
-                    if c == "\'":
-                        whatImSending += "\""
-                    else:
-                        whatImSending += c
+                try:
+                    # Set the path for the Unix socket
+                    # socket_path = '/run/user/1002/signal-cli/socket'
 
-                print(whatImSending)
-                import socket
-                import os
+                    # Create the Unix socket client
+                    # client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
 
-                # Set the path for the Unix socket
-                socket_path = '/run/user/1002/signal-cli/socket'
+                    # Connect to the server
+                    # client.connect(socket_path)
 
-                # Create the Unix socket client
-                client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+                    # Send a message to the server
+                    self.client.sendall(whatImSending.encode())
+                    
 
-                # Connect to the server
-                client.connect(socket_path)
+                    # Close the connection
+                    # client.close()
+                except:
+                    logging.error("missed the server send")
 
-                # Send a message to the server
-                client.sendall(whatImSending.encode())
+                self.killServer()
 
-                # Receive a response from the server
-                # response = client.recv(1024)
-                # print(f'Received response: {response.decode()}')
-
-                # Close the connection
-                client.close()
-
-                # response = requests.post("http://127.0.0.1:8080", json=jsonrpc)
+               
         
     def sendGroup(self, userId, grId, message):
         # TODO alpha authenticate group?
 
         if self.authenticateGroup(userId, grId):
-            sanitizedMessage, changes = self.sanitizeMessage(message)
-            if len(sanitizedMessage) != 0:
-                subprocess.run(["signal-cli", "send", "-g", grId, "-m", sanitizedMessage], shell=False)
+            if len(message) != 0:
+ 
+                jsonrpc = {"jsonrpc":"2.0","method":"send","params":{"groupId": grId ,"message": message}, "id": "sendGroup"}
+                whatImSending = json.dumps(jsonrpc)
+
+                self.startServer()
+
+                try:
+                    # Set the path for the Unix socket
+                    # socket_path = '/run/user/1002/signal-cli/socket'
+
+                    # Create the Unix socket client
+                    # client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+
+                    # Connect to the server
+                    # client.connect(socket_path)
+
+                    # Send a message to the server
+                    self.client.sendall(whatImSending.encode())
+
+                    # Close the connection
+                    # client.close()
+                except:
+                    logging.error("missed the server sendGroup")
+                
+                self.killServer()
         
     def sendNTS(self, message):
-        sanitizedMessage, changes = self.sanitizeMessage(message)
-        if len(sanitizedMessage) != 0:
-                subprocess.run(["signal-cli", "send", "--note-to-self", "-m", sanitizedMessage], shell=False)
+        if len(message) != 0:
+ 
+            jsonrpc = {"jsonrpc":"2.0","method":"send","params":{"recipient":["Note To Self"] ,"message": message}, "id": "sendNTS"}
+            whatImSending = json.dumps(jsonrpc)
+
+            self.startServer()
+
+            try:
+                # Set the path for the Unix socket
+                # socket_path = '/run/user/1002/signal-cli/socket'
+
+                # Create the Unix socket client
+                # client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+
+                # Connect to the server
+                # client.connect(socket_path)
+
+                # Send a message to the server
+                self.client.sendall(whatImSending.encode())
+
+                # Close the connection
+                # client.close()
+            except:
+                logging.error("missed the server sendNTS")
+            
+            print("NTS KILLLL HERE")
+            self.killServer()
 
     def receive(self):
+        # self.killServer()
         output = subprocess.run(["signal-cli", "receive"],
         capture_output=True, text=True, shell=False)
+        # self.startServer()
         return (output)
 
     def listGroups(self):
+        # self.killServer()
         output = subprocess.run(["signal-cli", "listGroups", "-d"],
         capture_output=True, text=True, shell=False)
         self.groupsTimeStamp = time.time()
+        # self.startServer()
 
         return (output)
 
