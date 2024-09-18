@@ -81,7 +81,8 @@ class SignalObj:
         # self.client.connect(self.socket_path)
         # except:
             # logging.error("can't connect client")
-        self.client.connect(self.socket_path)
+        client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        client.connect(self.socket_path)
         self.client = client
 
     
