@@ -7,7 +7,7 @@ run:build
 test:myTests
 	docker run signal-info-bot:testing
 
-build:
+build:remove
 	docker build -t signal-info-bot:latest .
 
 myTests:

@@ -18,8 +18,6 @@ logging.basicConfig(
 )
 
 signal = signalpy.SignalObj("config.json", "debug.log")
-# currentTime = datetime.datetime.now()
-tom = currentTime + datetime.timedelta(days=1)
 
 def main():
     logging.info("Bot alive")
@@ -29,21 +27,26 @@ def main():
         signal.parseReceive()
         logging.info("receieve run")
 
-        if datetime.datetime.now() >= tom:
-            yest = "yest.log"
-            current = "debug.log"
-            if os.path.isfile(yest):
-                os.remove(yest)
+        try:
+            if datetime.datetime.now() >= tom:
+                yest = "yest.log"
+                current = "debug.log"
+                if os.path.isfile(yest):
+                    os.remove(yest)
 
-            if os.path.isfile(current):
-                shutil.copy(current, yest)
+                if os.path.isfile(current):
+                    shutil.copy(current, yest)
 
-                os.remove(current)
-            
-                with open(path, 'a'):
-                    os.utime(path, None)
-                    
-            tom = currentTime + datetime.timedelta(days=1)
+                    os.remove(current)
+                
+                    with open(path, 'a'):
+                        os.utime(path, None)
+                        
+                tom = tom + datetime.timedelta(days=1)
+                logging.info(f"tom set for {tom}")
+        except:
+            tom = datetime.datetime.now() + datetime.timedelta(days=1)
+            logging.info(f"tom set for {tom}")
 
 
 if __name__ == "__main__":
