@@ -2,7 +2,7 @@
 	build
 
 run:build
-	docker run --name signalInfoBotContainer -it signal-info-bot:latest
+	docker run --name signalInfoBotContainer -v .:/code signal-info-bot:latest
 
 test:myTests
 	docker run signal-info-bot:testing
