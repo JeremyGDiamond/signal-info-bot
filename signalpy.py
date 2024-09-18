@@ -3,7 +3,6 @@ import json
 import re
 import time
 import logging
-import requests
 import socket
 import os
 
@@ -41,7 +40,7 @@ class SignalObj:
 
     def __init__(self, configFileName, logFileName):
         loggerConfig(logFileName)
-        self.proc = subprocess.Popen(["pwd"], shell=False) # to set the type
+        self.proc = subprocess.Popen(["cat","config.json"], shell=False) # to set the type
         # time.sleep(10)
         self.socket_path = '/run/user/1002/signal-cli/socket'
         self.client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
