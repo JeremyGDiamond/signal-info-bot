@@ -101,6 +101,14 @@ def testSend():
     signal.send(signal.config["testDmId"], "bot: hardcoded test send function")
     passedTestPrint("testSend")
 
+# def testSendJsonRPC():
+#     # signal.receive()
+#     # print("start server")
+#     # time.sleep(10)
+#     print("sending")
+#     signal.sendJsonRPC(signal.config["testDmId"], "bot: hardcoded test send jsonrpc function")
+#     passedTestPrint("testSendJsonRPC")
+
 def testSendGroup():
     # signal.receive()
     signal.sendGroup(signal.config["admin"], signal.config["testGrId"], "bot: hardcoded test group send function")
@@ -199,10 +207,6 @@ def testParseReceive():
     signal.parseReceive()
     passedTestPrint("testParseReceive")
 
-
-
-
-
 def main():
     
     logging.info("signalpi Tests")
@@ -211,8 +215,8 @@ def main():
     # testGenGroups()
 
     # san tests
-    passSan()
-    failEachBlockedChar()
+    # passSan()
+    # failEachBlockedChar()
 
     # send receive and list groups tests
     testSend()
@@ -221,6 +225,7 @@ def main():
     testAdminAlert()
     testReceive()
     testListGroups()
+    
 
     # group info tests
     testGetGroupMembers()

@@ -24,7 +24,7 @@ RUN apt-get install qrencode python3 -y
 
 # CMD ./linkAccount.sh signalCliContainer;python3 main.py
 
-CMD ./start.sh dockerBot
+CMD ./containerStart.sh dockerBot
 
 # todo 
 # X copy files into container
