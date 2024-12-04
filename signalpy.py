@@ -42,7 +42,6 @@ class SignalObj:
         loggerConfig(logFileName)
         self.proc = subprocess.Popen(["cat","config.json"], shell=False) # to set the type
         # time.sleep(10)
-        self.socket_path = '/run/user/1002/signal-cli/socket'
         self.client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
 
 
@@ -50,6 +49,7 @@ class SignalObj:
         self.config = {}
         self.configFileName = configFileName
         self.readconfig()
+        self.socket_path = self.config["socketFile"]
 
         self.groups = {}  # grId: { "name": str, "members": list[str], "admins": list[str] }
         self.groupsTimeStamp = 0
@@ -75,7 +75,7 @@ class SignalObj:
     # needed becuse of shell injections
     def startServer(self):
         logging.error("startServer Called")
-        self.proc = subprocess.Popen(["signal-cli","-a", self.config["myPhone"], "daemon", "--receive-mode", "manual", "--socket"], shell=False)
+        self.proc = subprocess.Popen(["signal-cli","-a", self.config["myPhone"], "daemon", "--receive-mode", "manual", "--socket", self.config["socketFile"]], shell=False)
         time.sleep(5)
         # try:
         # self.client.connect(self.socket_path)
@@ -92,7 +92,7 @@ class SignalObj:
             self.client.close()
         except:
             logging.error("can't close client")
-
+        time.sleep(5)
         self.proc.terminate()
         time.sleep(5)
 
