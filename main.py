@@ -21,32 +21,43 @@ signal = signalpy.SignalObj("config.json", "debug.log")
 
 def main():
     logging.info("Bot alive")
+
+    waitFor10min = 0
     
     while True:
         # signal.receive()
         signal.parseReceive()
         logging.info("receieve run")
 
-        try:
-            if datetime.datetime.now() >= tom:
-                yest = "yest.log"
-                current = "debug.log"
-                if os.path.isfile(yest):
-                    os.remove(yest)
+        waitFor10min += 1
 
-                if os.path.isfile(current):
-                    shutil.copy(current, yest)
+        if waitFor10min == 61: #this is a hack
+            signal.genGroups()
+            logging.info("groups gen, welcomes sent")
+            waitFor10min = 0
 
-                    os.remove(current)
+        
+
+        # try:
+        #     if datetime.datetime.now() >= tom:
+        #         yest = "yest.log"
+        #         current = "debug.log"
+        #         if os.path.isfile(yest):
+        #             os.remove(yest)
+
+        #         if os.path.isfile(current):
+        #             shutil.copy(current, yest)
+
+        #             os.remove(current)
                 
-                    with open(path, 'a'):
-                        os.utime(path, None)
+        #             with open(path, 'a'):
+        #                 os.utime(path, None)
                         
-                tom = tom + datetime.timedelta(days=1)
-                logging.info(f"tom set for {tom}")
-        except:
-            tom = datetime.datetime.now() + datetime.timedelta(days=1)
-            logging.info(f"tom set for {tom}")
+        #         tom = tom + datetime.timedelta(days=1)
+        #         logging.info(f"tom set for {tom}")
+        # except:
+        #     tom = datetime.datetime.now() + datetime.timedelta(days=1)
+        #     logging.info(f"tom set for {tom}")
 
 
 if __name__ == "__main__":
