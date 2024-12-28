@@ -64,8 +64,8 @@ def wholeRecv(p, recv):
     while True:
         try:
             line = p.recvline().decode().strip()
-            recv = recv + line
-        except EOFError:
+            recv = recv + line + "\n"
+        except EOFError: 
             break
 
     return recv
@@ -103,7 +103,10 @@ class SignalObj:
             self.client.close()
         except:
             logging.error("can't close client")
-        # os.remove(self.config["socketFile"])
+
+        # fixes stop condition
+        if os.path.exists(self.config["socketFile"]):
+            os.remove(self.config["socketFile"])
         self.proc.kill()
         time.sleep(5)
         
@@ -177,7 +180,6 @@ class SignalObj:
  
                 jsonrpc = {"jsonrpc":"2.0","method":"send","params":{"recipient":[userId] ,"message": message}, "id": "send"}
                 whatImSending = json.dumps(jsonrpc)
-                print("got here", whatImSending)
 
                 self.startServer()
 
@@ -525,6 +527,7 @@ class SignalObj:
                     grId = id
 
             if grId is None:
+                print("line 533 is the issue",msg)
                 self.sendError(userId, f"cannot find group with that name.")
                 return
 
@@ -591,15 +594,10 @@ class SignalObj:
 
     def parseReceive(self):
         rcv_stdout = self.receive()
-        print(rcv_stdout)
         if rcv_stdout.strip() == "":
             return
         # TODO: uncomment. When you receive after a long time of not receiving, I'm pretty sure you'll receive everything since the last time, so don't uncomment following two lines before running once without them
         for msg in rcv_stdout.split("Envelope from:"):
             self.processMsg(msg)
-
-        # Passive refresh
-        if self.groupsTimeStamp - time.time() > PASSIVE_REFRESH:
-            self.genGroups()
 
         return
