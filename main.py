@@ -1,5 +1,5 @@
 import signalpy
-import subprocess
+# import subprocess
 import json
 import time
 import datetime

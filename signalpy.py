@@ -1,4 +1,5 @@
 import subprocess
+from pwn import process
 import json
 import re
 import time
@@ -35,16 +36,50 @@ def loggerConfig(logFileName):
         ]
     )
 
+def printRecv(p, recv):
+    while True:
+        try:
+            recv = p.recvline().decode().strip()
+            if not recv:
+                break
+            print(recv)
+        except EOFError:
+            break
+
+    return recv
+
+def endOfRecvBlock(p, recv):
+    while True:
+        try:
+            recv = p.recvline().decode().strip()
+            if not recv:
+                break
+        except EOFError:
+            break
+
+    return recv
+
+def wholeRecv(p, recv):
+    line = ""
+    while True:
+        try:
+            line = p.recvline().decode().strip()
+            recv = recv + line
+        except EOFError:
+            break
+
+    return recv
+
 # signal class
 class SignalObj:
 
     def __init__(self, configFileName, logFileName):
         loggerConfig(logFileName)
-        self.proc = subprocess.Popen(["cat","config.json"], shell=False) # to set the type
-        # time.sleep(10)
+        self.proc = process(["cat","config.json"]) # to set the type
+        self.recv = ""
+        self.recv = wholeRecv(self.proc, self.recv)
+        # print(self.recv)
         self.client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-
-
 
         self.config = {}
         self.configFileName = configFileName
@@ -68,33 +103,35 @@ class SignalObj:
             self.client.close()
         except:
             logging.error("can't close client")
-        self.proc.terminate()
+        # os.remove(self.config["socketFile"])
+        self.proc.kill()
         time.sleep(5)
         
     
     # needed becuse of shell injections
     def startServer(self):
-        logging.error("startServer Called")
-        self.proc = subprocess.Popen(["signal-cli","-a", self.config["myPhone"], "daemon", "--receive-mode", "manual", "--socket", self.config["socketFile"]], shell=False)
+        logging.info("startServer Called")
+        self.proc = process(["signal-cli","-a", self.config["myPhone"], "daemon", "--receive-mode", "manual", "--socket", self.socket_path])
         time.sleep(5)
-        # try:
-        # self.client.connect(self.socket_path)
-        # except:
-            # logging.error("can't connect client")
+        
         client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         client.connect(self.socket_path)
         self.client = client
 
     
     def killServer(self):
-        logging.error("killServer called")
+        logging.info("killServer called")
         try:
             self.client.close()
         except:
             logging.error("can't close client")
         time.sleep(5)
-        self.proc.terminate()
+        self.proc.kill()
         time.sleep(5)
+        try:
+            os.remove(self.config["socketFile"])
+        except:
+            logging.error("socket file removed when it did not exist")
 
     def sanitizeMessage(self, message):
         
@@ -133,12 +170,6 @@ class SignalObj:
             self.adminAlert(errorMessage)
         
         return newMessage, changes
-       
-    # def send(self, userId, message):
-    #     if self.authenticate(userId):
-    #         sanitizedMessage, changes = self.sanitizeMessage(message)
-    #         if len(sanitizedMessage) != 0:
-    #             subprocess.run(["signal-cli", "send", userId, "-m", sanitizedMessage], shell=False)
 
     def send(self, userId, message):
         if self.authenticate(userId):
@@ -146,6 +177,7 @@ class SignalObj:
  
                 jsonrpc = {"jsonrpc":"2.0","method":"send","params":{"recipient":[userId] ,"message": message}, "id": "send"}
                 whatImSending = json.dumps(jsonrpc)
+                print("got here", whatImSending)
 
                 self.startServer()
 
@@ -234,16 +266,19 @@ class SignalObj:
 
     def receive(self):
         # self.killServer()
-        output = subprocess.run(["signal-cli", "receive"],
-        capture_output=True, text=True, shell=False)
+        proc = process(["signal-cli", "receive"])
+        output = ""
+        output = wholeRecv(proc,output)
         # self.startServer()
         return (output)
 
     def listGroups(self):
         # self.killServer()
-        output = subprocess.run(["signal-cli", "listGroups", "-d"],
-        capture_output=True, text=True, shell=False)
+        proc = process(["signal-cli", "listGroups", "-d"])
+        output = ""
+        output = wholeRecv(proc, output)
         self.groupsTimeStamp = time.time()
+        proc.kill()
         # self.startServer()
 
         return (output)
@@ -300,7 +335,7 @@ class SignalObj:
         if time.time() - self.groupsTimeStamp < ACTIVE_REFRESH:
             return
 
-        res = self.listGroups().stdout
+        res = self.listGroups()
         res_groups = res.split("Id: ")
 
         group_re = r"(.+) Name: (.+) Description: (.|\n)* Active: (true|false) .+ Members: (\[.*\]) Pending members: .+ Admins: (\[.*\]) Banned: "
@@ -555,7 +590,8 @@ class SignalObj:
     
 
     def parseReceive(self):
-        rcv_stdout = self.receive().stdout
+        rcv_stdout = self.receive()
+        print(rcv_stdout)
         if rcv_stdout.strip() == "":
             return
         # TODO: uncomment. When you receive after a long time of not receiving, I'm pretty sure you'll receive everything since the last time, so don't uncomment following two lines before running once without them

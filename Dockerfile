@@ -20,7 +20,10 @@ RUN apt update
 
 RUN apt-get install signal-cli-native -y
 
-RUN apt-get install qrencode python3 -y
+RUN apt-get install qrencode python3 pip -y
+
+RUN python3 -m pip install --upgrade pip
+RUN python3 -m pip install --upgrade pwntools
 
 # CMD ./linkAccount.sh signalCliContainer;python3 main.py
 

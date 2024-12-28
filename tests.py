@@ -212,13 +212,15 @@ def main():
     logging.info("signalpi Tests")
 
     # init tests
-    # testGenGroups()
+    testGenGroups()
 
     # san tests
-    # passSan()
-    # failEachBlockedChar()
+    passSan()
+    failEachBlockedChar()
 
     # send receive and list groups tests
+    
+    
     testSend()
     testSendGroup()
     testSendNTS()
@@ -236,7 +238,7 @@ def main():
     testAuth()
     testAuthGroup()
 
-    #test messege sends
+    # test messege sends
     testSendWelcome()
     testActivateGroup()
     testSendHelp()
