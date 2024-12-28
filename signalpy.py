@@ -63,8 +63,24 @@ def wholeRecv(p, recv):
     line = ""
     while True:
         try:
-            line = p.recvline().decode().strip()
+            line = p.recvline(timeout=0.2).decode().strip()
             recv = recv + line + "\n"
+        except EOFError: 
+            break
+
+    return recv
+
+def serverRecv(p, recv):
+    conBlank = 0
+    while conBlank < 15:
+        try:
+            line = p.recvline(timeout=2).decode().strip()
+            if line == "":
+                conBlank += 1
+            else:
+                print("line 81", line)
+                recv = recv + line + "\n"
+                conBlank = 0
         except EOFError: 
             break
 
@@ -115,6 +131,15 @@ class SignalObj:
     def startServer(self):
         logging.info("startServer Called")
         self.proc = process(["signal-cli","-a", self.config["myPhone"], "daemon", "--receive-mode", "manual", "--socket", self.socket_path])
+        time.sleep(5)
+        
+        client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        client.connect(self.socket_path)
+        self.client = client
+
+    def startServerAutoRecv(self):
+        logging.info("startServerAutoRecv Called")
+        self.proc = process(["signal-cli","-a", self.config["myPhone"], "daemon", "--socket", self.socket_path])
         time.sleep(5)
         
         client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
@@ -240,7 +265,7 @@ class SignalObj:
     def sendNTS(self, message):
         if len(message) != 0:
  
-            jsonrpc = {"jsonrpc":"2.0","method":"send","params":{"recipient":["Note To Self"] ,"message": message}, "id": "sendNTS"}
+            jsonrpc = {"jsonrpc":"2.0","id":"id","method":"subscribeReceive"}
             whatImSending = json.dumps(jsonrpc)
 
             self.startServer()
@@ -273,6 +298,18 @@ class SignalObj:
         output = wholeRecv(proc,output)
         # self.startServer()
         proc.kill()
+        return (output)
+    
+    def receiveOverSocket(self):
+
+        self.startServerAutoRecv()
+
+        output = ""
+        output = serverRecv(self.proc,output)
+        
+        print("line 313", output)
+        
+        self.killServer()
         return (output)
 
     def listGroups(self):
