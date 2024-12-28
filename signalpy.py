@@ -272,6 +272,7 @@ class SignalObj:
         output = ""
         output = wholeRecv(proc,output)
         # self.startServer()
+        proc.kill()
         return (output)
 
     def listGroups(self):
