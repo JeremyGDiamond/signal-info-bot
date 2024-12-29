@@ -27,7 +27,7 @@ def main():
     while True:
         # signal.receive()
         signal.parseReceive()
-        logging.info("receieve run RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR")
+        logging.info("receieve run")
 
         waitFor10min += 1
 
