@@ -3,35 +3,9 @@
 Welcome and info bot for signal groups based on [signal cli](https://github.com/AsamK/signal-cli)
 
 ## TODO
-- [-] MVP
-  - [ ] parse commands
-  - [x] Welcome message & command
-  - [x] default command (shows the default group name to members)
-  - [x] pulls command list and resps from json config file
-  - [X] help command
-    - [x] basic help
-  - [X] dockerize
-    - [x] ubuntu image
-    - [x] installs all deps
-    - [x] copy files
-    - [x] login to account if logged out
-    - [x] run bot
-    - [X] persistent volume
-  - [X] multi groups
-  
-- [ ] beta
-  - [ ] update command
-  - [-] admin, logging and alerts
-  - [-] how to and readme
-  - [ ] group admin help
-  - [ ] bot admin help
-  
-
-- [ ] release
-  - [ ] secure remote config
-  - [ ] backup command and changes group chat
-  - [ ] cron
-  - [ ] group admins mass send
+command descriptions 
+finish this readme
+remove dead functions 
   
 ## Setup
 
@@ -73,11 +47,6 @@ todo example
 
 ## Help
 Every group has a help message that will be sent to all new members and can be called with the help command
-
-todo example
-
-## Update
-Every command's output can be updated by group admins with the update command followed by the command to be updated. This will be followed by an ack of update mode. the contents of the follwoing message will overwrite the old respose. it is reccomened to call the command first so you have a copy of the command test.
 
 todo example
 
