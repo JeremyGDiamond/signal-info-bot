@@ -146,9 +146,9 @@ class SignalObj:
         self.proc = process(["signal-cli","-a", self.config["myPhone"], "daemon", "--socket", self.socket_path])
         time.sleep(5)
         
-        client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        client.connect(self.socket_path)
-        self.client = client
+        # client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        # client.connect(self.socket_path)
+        # self.client = client
 
     
     def killServer(self):
@@ -210,30 +210,23 @@ class SignalObj:
                 jsonrpc = {"jsonrpc":"2.0","method":"send","params":{"recipient":[userId] ,"message": message}, "id": "send"}
                 whatImSending = json.dumps(jsonrpc)
 
-                self.killServer()
-                self.startServer()
+
+                client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+                client.connect(self.socket_path)
+                self.client = client
 
                 try:
-                    # Set the path for the Unix socket
-                    # socket_path = '/run/user/1002/signal-cli/socket'
-
-                    # Create the Unix socket client
-                    # client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-
-                    # Connect to the server
-                    # client.connect(socket_path)
-
+                    
                     # Send a message to the server
                     self.client.sendall(whatImSending.encode())
                     
-
-                    # Close the connection
-                    # client.close()
                 except:
                     logging.error("missed the server send")
 
-                self.killServer()
-                self.startServerAutoRecv()
+                try:
+                    self.client.close()
+                except:
+                    logging.error("can't close client")
 
                
         
@@ -246,27 +239,23 @@ class SignalObj:
                 jsonrpc = {"jsonrpc":"2.0","method":"send","params":{"groupId": grId ,"message": message}, "id": "sendGroup"}
                 whatImSending = json.dumps(jsonrpc)
 
-                # self.startServer()
+                client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+                client.connect(self.socket_path)
+                self.client = client
 
                 try:
-                    # Set the path for the Unix socket
-                    # socket_path = '/run/user/1002/signal-cli/socket'
-
-                    # Create the Unix socket client
-                    # client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-
-                    # Connect to the server
-                    # client.connect(socket_path)
-
+                    
                     # Send a message to the server
                     self.client.sendall(whatImSending.encode())
-
-                    # Close the connection
-                    # client.close()
+                    
                 except:
-                    logging.error("missed the server sendGroup")
-                
-                # self.killServer()
+                    logging.error("missed the server send")
+
+                try:
+                    self.client.close()
+                except:
+                    logging.error("can't close client")
+
         
     def sendNTS(self, message):
         if len(message) != 0:
@@ -274,28 +263,25 @@ class SignalObj:
             jsonrpc = {"jsonrpc":"2.0","id":"id","method":"subscribeReceive"}
             whatImSending = json.dumps(jsonrpc)
 
-            # self.startServer()
+            client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            client.connect(self.socket_path)
+            self.client = client
 
             try:
-                # Set the path for the Unix socket
-                # socket_path = '/run/user/1002/signal-cli/socket'
-
-                # Create the Unix socket client
-                # client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-
-                # Connect to the server
-                # client.connect(socket_path)
-
+                
                 # Send a message to the server
                 self.client.sendall(whatImSending.encode())
-
-                # Close the connection
-                # client.close()
+                
             except:
-                logging.error("missed the server sendNTS")
+                logging.error("missed the server send")
+
+            try:
+                self.client.close()
+            except:
+                logging.error("can't close client")
             
             print("NTS KILLLL HERE")
-            # self.killServer()
+            
 
     def receive(self):
         # self.killServer()
