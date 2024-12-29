@@ -74,11 +74,10 @@ def serverRecv(p, recv):
     conBlank = 0
     while conBlank < 15:
         try:
-            line = p.recvline(timeout=2).decode().strip()
+            line = p.recvline(timeout=0.2).decode().strip()
             if line == "":
                 conBlank += 1
             else:
-                print("line 81", line)
                 recv = recv + line + "\n"
                 conBlank = 0
         except EOFError: 
@@ -113,8 +112,13 @@ class SignalObj:
         self.commandInjectionBlockChars = []
         self.commandInjectionBlockStrings = []
 
+        # self.startServerAutoRecv()
+
+
     def __del__(self):
-    # body of destructor
+        
+        self.killServer()
+
         try:
             self.client.close()
         except:
@@ -142,9 +146,9 @@ class SignalObj:
         self.proc = process(["signal-cli","-a", self.config["myPhone"], "daemon", "--socket", self.socket_path])
         time.sleep(5)
         
-        client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        client.connect(self.socket_path)
-        self.client = client
+        # client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        # client.connect(self.socket_path)
+        # self.client = client
 
     
     def killServer(self):
@@ -206,28 +210,23 @@ class SignalObj:
                 jsonrpc = {"jsonrpc":"2.0","method":"send","params":{"recipient":[userId] ,"message": message}, "id": "send"}
                 whatImSending = json.dumps(jsonrpc)
 
-                self.startServer()
+
+                client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+                client.connect(self.socket_path)
+                self.client = client
 
                 try:
-                    # Set the path for the Unix socket
-                    # socket_path = '/run/user/1002/signal-cli/socket'
-
-                    # Create the Unix socket client
-                    # client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-
-                    # Connect to the server
-                    # client.connect(socket_path)
-
+                    
                     # Send a message to the server
                     self.client.sendall(whatImSending.encode())
                     
-
-                    # Close the connection
-                    # client.close()
                 except:
                     logging.error("missed the server send")
 
-                self.killServer()
+                try:
+                    self.client.close()
+                except:
+                    logging.error("can't close client")
 
                
         
@@ -240,27 +239,23 @@ class SignalObj:
                 jsonrpc = {"jsonrpc":"2.0","method":"send","params":{"groupId": grId ,"message": message}, "id": "sendGroup"}
                 whatImSending = json.dumps(jsonrpc)
 
-                self.startServer()
+                client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+                client.connect(self.socket_path)
+                self.client = client
 
                 try:
-                    # Set the path for the Unix socket
-                    # socket_path = '/run/user/1002/signal-cli/socket'
-
-                    # Create the Unix socket client
-                    # client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-
-                    # Connect to the server
-                    # client.connect(socket_path)
-
+                    
                     # Send a message to the server
                     self.client.sendall(whatImSending.encode())
-
-                    # Close the connection
-                    # client.close()
+                    
                 except:
-                    logging.error("missed the server sendGroup")
-                
-                self.killServer()
+                    logging.error("missed the server send")
+
+                try:
+                    self.client.close()
+                except:
+                    logging.error("can't close client")
+
         
     def sendNTS(self, message):
         if len(message) != 0:
@@ -268,28 +263,25 @@ class SignalObj:
             jsonrpc = {"jsonrpc":"2.0","id":"id","method":"subscribeReceive"}
             whatImSending = json.dumps(jsonrpc)
 
-            self.startServer()
+            client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            client.connect(self.socket_path)
+            self.client = client
 
             try:
-                # Set the path for the Unix socket
-                # socket_path = '/run/user/1002/signal-cli/socket'
-
-                # Create the Unix socket client
-                # client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-
-                # Connect to the server
-                # client.connect(socket_path)
-
+                
                 # Send a message to the server
                 self.client.sendall(whatImSending.encode())
-
-                # Close the connection
-                # client.close()
+                
             except:
-                logging.error("missed the server sendNTS")
+                logging.error("missed the server send")
+
+            try:
+                self.client.close()
+            except:
+                logging.error("can't close client")
             
             print("NTS KILLLL HERE")
-            self.killServer()
+            
 
     def receive(self):
         # self.killServer()
@@ -302,24 +294,22 @@ class SignalObj:
     
     def receiveOverSocket(self):
 
-        self.startServerAutoRecv()
+        # self.startServerAutoRecv()
 
         output = ""
         output = serverRecv(self.proc,output)
         
-        print("line 313", output)
-        
-        self.killServer()
+        # self.killServer()
         return (output)
 
     def listGroups(self):
-        # self.killServer()
+        self.killServer()
         proc = process(["signal-cli", "listGroups", "-d"])
         output = ""
         output = wholeRecv(proc, output)
         self.groupsTimeStamp = time.time()
         proc.kill()
-        # self.startServer()
+        self.startServerAutoRecv()
 
         return (output)
 
@@ -565,7 +555,6 @@ class SignalObj:
                     grId = id
 
             if grId is None:
-                print("line 533 is the issue",msg)
                 self.sendError(userId, f"cannot find group with that name.")
                 return
 
@@ -631,7 +620,7 @@ class SignalObj:
     
 
     def parseReceive(self):
-        rcv_stdout = self.receive()
+        rcv_stdout = self.receiveOverSocket()
         if rcv_stdout.strip() == "":
             return
         # TODO: uncomment. When you receive after a long time of not receiving, I'm pretty sure you'll receive everything since the last time, so don't uncomment following two lines before running once without them
