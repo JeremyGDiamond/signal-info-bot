@@ -1,4 +1,3 @@
-import subprocess
 from pwn import process
 import json
 import re
@@ -90,6 +89,7 @@ class SignalObj:
 
     def __init__(self, configFileName, logFileName):
         loggerConfig(logFileName)
+        logging.info("starting process: \"cat config.json\"")
         self.proc = process(["cat","config.json"]) # to set the type
         self.recv = ""
         self.recv = wholeRecv(self.proc, self.recv)
@@ -127,7 +127,11 @@ class SignalObj:
         # fixes stop condition
         if os.path.exists(self.config["socketFile"]):
             os.remove(self.config["socketFile"])
+        logging.info("double killing process: self.proc")
         self.proc.kill()
+        while(self.proc.proc.returncode == None):
+            logging.info("waiting to proc to finish: " + str(self.proc.proc.returncode))
+            time.sleep(0.1)
         time.sleep(5)
         
     
@@ -146,9 +150,23 @@ class SignalObj:
         self.proc = process(["signal-cli","-a", self.config["myPhone"], "daemon", "--socket", self.socket_path])
         time.sleep(5)
         
-        # client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        # client.connect(self.socket_path)
-        # self.client = client
+        try:
+            client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            client.connect(self.socket_path)
+        except:
+            time.sleep(15)
+            try: 
+                client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+                client.connect(self.socket_path)
+            except:
+                time.sleep(30)
+                client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+                client.connect(self.socket_path)
+        
+        try:
+            self.client.close()
+        except:
+            logging.error("can't close client")
 
     
     def killServer(self):
@@ -159,7 +177,10 @@ class SignalObj:
             logging.error("can't close client")
         time.sleep(5)
         self.proc.kill()
-        time.sleep(5)
+        while(self.proc.proc.returncode == None):
+            logging.info("waiting to proc to finish: " + str(self.proc.proc.returncode))
+            time.sleep(0.1)
+
         try:
             os.remove(self.config["socketFile"])
         except:
@@ -285,10 +306,12 @@ class SignalObj:
 
     def receive(self):
         # self.killServer()
+        logging.info("starting process: \"signal-cli receive\"")
         proc = process(["signal-cli", "receive"])
         output = ""
         output = wholeRecv(proc,output)
         # self.startServer()
+        logging.info("killing process: \"signal-cli receive\"")
         proc.kill()
         return (output)
     
@@ -304,11 +327,17 @@ class SignalObj:
 
     def listGroups(self):
         self.killServer()
+        logging.info("starting process: \"signal-cli listGroups -d\"")
         proc = process(["signal-cli", "listGroups", "-d"])
         output = ""
         output = wholeRecv(proc, output)
         self.groupsTimeStamp = time.time()
+        logging.info("killing process: \"signal-cli listGroups -d\"")
         proc.kill()
+        while(proc.proc.returncode == None):
+            logging.info("waiting to proc to finish: " + str(proc.proc.returncode))
+            time.sleep(0.1)
+
         self.startServerAutoRecv()
 
         return (output)
@@ -441,11 +470,9 @@ class SignalObj:
                 continue  # Bot does not have access to group with given id.
 
             grHelp = baseHelpMessage + "\n--\"" + grName + "\" Commands--"
-            for commKey, commValue in value["commands"].items():
-                cutOff = "..."
-                if len(commValue) > 49:
-                    cutOff = "..."
-                grHelp = grHelp + "\n  " + commKey + ": " + commValue[:50] + cutOff
+            for commKey, commArray in value["commands"].items():
+                commValue = commArray[1]
+                grHelp = grHelp + "\n  " + commKey + ": " + commValue
 
             self.helps[grId] = grHelp
 
@@ -573,7 +600,7 @@ class SignalObj:
         elif cmd not in self.config["groups"][grId]["commands"]:
             self.sendError(userId, f"do not know that command for this group. Try help \"group name\" to get all possible commands.")
         else:
-            res = self.config["groups"][grId]["commands"][cmd]
+            res = self.config["groups"][grId]["commands"][cmd][0]
             self.send(userId, res)
 
     def processMsg(self, msg: str):
