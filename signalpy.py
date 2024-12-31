@@ -472,10 +472,7 @@ class SignalObj:
             grHelp = baseHelpMessage + "\n--\"" + grName + "\" Commands--"
             for commKey, commArray in value["commands"].items():
                 commValue = commArray[1]
-                cutOff = "..."
-                if len(commValue) > 49:
-                    cutOff = "..."
-                grHelp = grHelp + "\n  " + commKey + ": " + commValue[:50] + cutOff
+                grHelp = grHelp + "\n  " + commKey + ": " + commValue
 
             self.helps[grId] = grHelp
 
