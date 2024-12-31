@@ -9,7 +9,7 @@
         "grid" : {
             "welcomeMessage" : "#bot test Welcome message",
             "commands" : {
-                "test" : "#bot test command from config"
+                "test" : ["bot: test command from config", "test descrition for the test config"]
             }
         }
     },
