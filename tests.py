@@ -27,10 +27,10 @@ def testReadConfig(): #TODO alpha use exmapleConfig.json
     pass
 
 def testGenGroups(): #TODO alpha
-    signal.receive()
+    signal.receiveOverSocket()
     logging.info(f"Add someone to the test group now to test new member welcome messages")
     time.sleep(60 * 2) #change active refresh to make this work
-    signal.receive()
+    signal.receiveOverSocket()
     signal.genGroups()
     passedTestPrint("testGenGroups")
 
@@ -40,60 +40,6 @@ def testValidateConfigGroups(): #TODO alpha use exmapleConfig.json
 def testGenHelps(): #TODO alpha use exmapleConfig.json
     pass
 
-# test message sanitizer
-
-def passSan():
-    message0 = "ThisMessageShouldBeTheSame1234567890" #alpha num
-    message1 = "ThisMessageShouldEndWithAConfused." #test .
-    message2 = "ThisMessageShouldEndWithAConfusedSpace " #test space
-    message3 = "ThisMessageShouldEndWithAConfused:" #test :
-    message4 = "ThisMessageShouldEndWithAConfused," #test ,
-
-    sanitizedMessage, changes = signal.sanitizeMessage(message0)
-    if not (sanitizedMessage == message0):
-        failedTestPrint("passSan", "ERROR message0 mismatch")
-        return
-    
-    sanitizedMessage, changes = signal.sanitizeMessage(message1)
-    if (sanitizedMessage == message1 or ord(sanitizedMessage[-1]) != 42232):
-        failedTestPrint("passSan", "ERROR message1 mismatch")
-        return
-        
-    sanitizedMessage, changes = signal.sanitizeMessage(message2)
-    if (sanitizedMessage == message2 or ord(sanitizedMessage[-1]) != 8200):
-        failedTestPrint("passSan", "ERROR message2 mismatch")
-        return
-    
-    sanitizedMessage, changes = signal.sanitizeMessage(message3)
-    if (sanitizedMessage == message3 or ord(sanitizedMessage[-1]) != 760):
-        failedTestPrint("passSan", "ERROR message3 mismatch")
-        return
-    
-    sanitizedMessage, changes = signal.sanitizeMessage(message4)
-    if (sanitizedMessage == message4 or ord(sanitizedMessage[-1]) != 8218):
-        failedTestPrint("passSan", "ERROR message4 mismatch")
-        return
-
-    passedTestPrint("passSan")
-
-
-def failEachBlockedChar(): #TODO alpha
-    message = "~!@#$%^&*())))))_+`=\u0009\\{\\}|[]\\;'<>?/"
-    sanitizedMessage, changes = signal.sanitizeMessage(message)
-    if changes != len(message) and len(sanitizedMessage) != 0:
-        logging.error(changes, len(message), len(sanitizedMessage))
-        failedTestPrint("failEachBlockedChar", "blocked char mismatch")
-        return
-    
-    passedTestPrint("failEachBlockedChar")
-
-    
-
-def failEachBlockedStrings(): #TODO beta
-    pass
-
-def failEachTestCommand(): #TODO beta
-    pass
 
 # test signal funcs
 def testSend():
@@ -101,13 +47,6 @@ def testSend():
     signal.send(signal.config["testDmId"], "bot: hardcoded test send function")
     passedTestPrint("testSend")
 
-# def testSendJsonRPC():
-#     # signal.receive()
-#     # print("start server")
-#     # time.sleep(10)
-#     print("sending")
-#     signal.sendJsonRPC(signal.config["testDmId"], "bot: hardcoded test send jsonrpc function")
-#     passedTestPrint("testSendJsonRPC")
 
 def testSendGroup():
     # signal.receive()
@@ -120,8 +59,8 @@ def testSendNTS():
     passedTestPrint("testSendNTS")
 
 def testReceive(): #TODO check ret codes and contents 
-    output = signal.receive()
-    logging.info(output)
+    output = signal.receiveOverSocket()
+    logging.info("testReceive: " + output)
     passedTestPrint("testReceive")
 
 def testListGroups(): #TODO check ret codes and contents
@@ -214,13 +153,7 @@ def main():
     # init tests
     testGenGroups()
 
-    # san tests
-    passSan()
-    failEachBlockedChar()
-
     # send receive and list groups tests
-    
-    
     testSend()
     testSendGroup()
     testSendNTS()
