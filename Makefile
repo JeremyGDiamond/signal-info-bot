@@ -22,3 +22,6 @@ runNew:buildNew
 
 buildNew:
 	docker build -t signal-info-bot:latest .
+
+stop:
+	docker stop signalInfoBotContainer
