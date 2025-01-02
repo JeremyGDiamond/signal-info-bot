@@ -4,14 +4,8 @@
 run:build
 	docker run --name signalInfoBotContainer -v .:/code signal-info-bot:latest
 
-test:myTests
-	docker run signal-info-bot:testing
-
 build:remove
 	docker build -t signal-info-bot:latest .
-
-myTests:
-	docker build -t signal-info-bot:testing .
 
 restart:
 	docker restart signalInfoBotContainer
@@ -22,3 +16,9 @@ remove:
 
 clean:remove
 	docker rmi signal-info-bot
+
+runNew:buildNew
+	docker run --name signalInfoBotContainer -v .:/code signal-info-bot:latest
+
+buildNew:
+	docker build -t signal-info-bot:latest .

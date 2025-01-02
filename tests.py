@@ -27,10 +27,10 @@ def testReadConfig(): #TODO alpha use exmapleConfig.json
     pass
 
 def testGenGroups(): #TODO alpha
-    signal.receiveOverSocket()
+    signal.receive()
     logging.info(f"Add someone to the test group now to test new member welcome messages")
     time.sleep(60 * 2) #change active refresh to make this work
-    signal.receiveOverSocket()
+    signal.receive()
     signal.genGroups()
     passedTestPrint("testGenGroups")
 
@@ -59,7 +59,7 @@ def testSendNTS():
     passedTestPrint("testSendNTS")
 
 def testReceive(): #TODO check ret codes and contents 
-    output = signal.receiveOverSocket()
+    output = signal.receive()
     logging.info("testReceive: " + output)
     passedTestPrint("testReceive")
 

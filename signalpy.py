@@ -35,29 +35,6 @@ def loggerConfig(logFileName):
         ]
     )
 
-def printRecv(p, recv):
-    while True:
-        try:
-            recv = p.recvline().decode().strip()
-            if not recv:
-                break
-            print(recv)
-        except EOFError:
-            break
-
-    return recv
-
-def endOfRecvBlock(p, recv):
-    while True:
-        try:
-            recv = p.recvline().decode().strip()
-            if not recv:
-                break
-        except EOFError:
-            break
-
-    return recv
-
 def wholeRecv(p, recv):
     line = ""
     while True:
@@ -109,11 +86,6 @@ class SignalObj:
         self.helps = {}  # { grId: helpText }
         self.genHelps()
 
-        self.commandInjectionBlockChars = []
-        self.commandInjectionBlockStrings = []
-
-        # self.startServerAutoRecv()
-
 
     def __del__(self):
         
@@ -133,21 +105,10 @@ class SignalObj:
             logging.info("waiting to proc to finish: " + str(self.proc.proc.returncode))
             time.sleep(0.1)
         time.sleep(5)
-        
-    
-    # needed becuse of shell injections
+
     def startServer(self):
         logging.info("startServer Called")
-        self.proc = process(["signal-cli","-a", self.config["myPhone"], "daemon", "--receive-mode", "manual", "--socket", self.socket_path])
-        time.sleep(5)
-        
-        client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        client.connect(self.socket_path)
-        self.client = client
-
-    def startServerAutoRecv(self):
-        logging.info("startServerAutoRecv Called")
-        self.proc = process(["signal-cli","-a", self.config["myPhone"], "daemon", "--socket", self.socket_path])
+        self.proc = process(["signal-cli","-a", self.config["myPhone"], "daemon", "--socket", self.socket_path, "--send-read-receipts"])
         time.sleep(5)
         
         try:
@@ -270,18 +231,18 @@ class SignalObj:
                     self.client.sendall(whatImSending.encode())
                     
                 except:
-                    logging.error("missed the server send")
+                    logging.error("missed the server send GROUP")
 
                 try:
                     self.client.close()
                 except:
-                    logging.error("can't close client")
+                    logging.error("can't close client GROUP")
 
         
     def sendNTS(self, message):
         if len(message) != 0:
  
-            jsonrpc = {"jsonrpc":"2.0","id":"id","method":"subscribeReceive"}
+            {"jsonrpc":"2.0","method":"send","params":{"recipient":self.config[myPhone] ,"message": message}, "id": "send"}
             whatImSending = json.dumps(jsonrpc)
 
             client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
@@ -294,35 +255,19 @@ class SignalObj:
                 self.client.sendall(whatImSending.encode())
                 
             except:
-                logging.error("missed the server send")
+                logging.error("missed the server send NTS")
 
             try:
                 self.client.close()
             except:
-                logging.error("can't close client")
+                logging.error("can't close client NTS")
             
-            print("NTS KILLLL HERE")
-            
-
-    def receive(self):
-        # self.killServer()
-        logging.info("starting process: \"signal-cli receive\"")
-        proc = process(["signal-cli", "receive"])
-        output = ""
-        output = wholeRecv(proc,output)
-        # self.startServer()
-        logging.info("killing process: \"signal-cli receive\"")
-        proc.kill()
-        return (output)
     
-    def receiveOverSocket(self):
-
-        # self.startServerAutoRecv()
+    def receive(self):
 
         output = ""
         output = serverRecv(self.proc,output)
         
-        # self.killServer()
         return (output)
 
     def listGroups(self):
@@ -338,7 +283,7 @@ class SignalObj:
             logging.info("waiting to proc to finish: " + str(proc.proc.returncode))
             time.sleep(0.1)
 
-        self.startServerAutoRecv()
+        self.startServer()
 
         return (output)
 
@@ -478,7 +423,6 @@ class SignalObj:
 
     # bot behaviors
     def adminAlert(self, adminAlertMessage):
-        # self.receive()
         if self.config["noteToSelfMode"]:
             self.sendNTS(adminAlertMessage)
         else:
@@ -505,7 +449,7 @@ class SignalObj:
         Check whether user has access to bot, i.e. is a member if the default
         group.
 
-        NOTE: this bakes if the user is in your contact list and you use ACIin the config file
+        NOTE: this brakes if the user is in your contact list and you use ACIin the config file
         """
         configGrId = self.config["default"]
         membersDefault = self.groups[configGrId]["members"]
@@ -647,7 +591,7 @@ class SignalObj:
     
 
     def parseReceive(self):
-        rcv_stdout = self.receiveOverSocket()
+        rcv_stdout = self.receive()
         if rcv_stdout.strip() == "":
             return
         # TODO: uncomment. When you receive after a long time of not receiving, I'm pretty sure you'll receive everything since the last time, so don't uncomment following two lines before running once without them

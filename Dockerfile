@@ -28,14 +28,3 @@ RUN python3 -m pip install --upgrade pwntools
 # CMD ./linkAccount.sh signalCliContainer;python3 main.py
 
 CMD ./containerStart.sh dockerBot
-
-# todo 
-# X copy files into container
-# - persistant login 
-# - setup script
-#   X checks if logged in
-#   X if not links device
-# X run bot
-# - tests endpoint in make
-# - tests runs on build
-# - 
