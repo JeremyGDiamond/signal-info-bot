@@ -2,15 +2,14 @@ FROM ubuntu:22.04
 
 WORKDIR /code
 
-COPY ./*.py /code
-
-COPY ./*.sh /code
-
-RUN chmod +x linkAccount.sh
-
 RUN apt update
 
 RUN apt install curl -y
+
+RUN apt-get install qrencode python3 pip -y
+
+RUN python3 -m pip install --upgrade pip
+RUN python3 -m pip install --upgrade pwntools
 
 RUN curl -sL -o /etc/apt/trusted.gpg.d/morph027-signal-cli.asc https://packaging.gitlab.io/signal-cli/gpg.key
 
@@ -20,10 +19,13 @@ RUN apt update
 
 RUN apt-get install signal-cli-native -y
 
-RUN apt-get install qrencode python3 pip -y
+COPY ./*.py /code
 
-RUN python3 -m pip install --upgrade pip
-RUN python3 -m pip install --upgrade pwntools
+COPY ./*.sh /code
+
+RUN chmod +x linkAccount.sh
+
+
 
 # CMD ./linkAccount.sh signalCliContainer;python3 main.py
 

@@ -50,7 +50,7 @@ def serverRecv(p, recv):
     conBlank = 0
     while conBlank < 15:
         try:
-            line = p.recvline(timeout=0.2).decode().strip()
+            line = p.recvline(timeout=0.05).decode().strip()
             if line == "":
                 conBlank += 1
             else:
