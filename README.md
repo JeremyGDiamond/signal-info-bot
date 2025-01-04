@@ -1,12 +1,7 @@
 # signal-info-bot
 
 Welcome and info bot for signal groups based on [signal cli](https://github.com/AsamK/signal-cli)
-
-## TODO
-command descriptions 
-finish this readme
-remove dead functions 
-  
+ 
 ## Setup
 
 ### Local
