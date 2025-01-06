@@ -13,7 +13,7 @@ logging.basicConfig(
     ]
 )
 
-signal = signalpy.SignalObj("testConfig.json", "testsDebug.log")
+signal = signalpy.SignalObj("testconfig.json5", "testsDebug.log")
 
 def passedTestPrint(name):
     logging.info(f"TEST:{name} PASSED")
@@ -23,7 +23,7 @@ def failedTestPrint(name, msg):
 
 # test init
 
-def testReadConfig(): #TODO alpha use exmapleConfig.json
+def testReadConfig(): #TODO alpha use exmapleconfig.json5
     pass
 
 def testGenGroups(): #TODO alpha
@@ -34,10 +34,10 @@ def testGenGroups(): #TODO alpha
     signal.genGroups()
     passedTestPrint("testGenGroups")
 
-def testValidateConfigGroups(): #TODO alpha use exmapleConfig.json
+def testValidateConfigGroups(): #TODO alpha use exmapleconfig.json5
     pass
 
-def testGenHelps(): #TODO alpha use exmapleConfig.json
+def testGenHelps(): #TODO alpha use exmapleconfig.json5
     pass
 
 

@@ -17,7 +17,7 @@ logging.basicConfig(
     ]
 )
 
-signal = signalpy.SignalObj("config.json", "debug.log")
+signal = signalpy.SignalObj("config.json5", "debug.log")
 
 def main():
     logging.info("Bot alive")

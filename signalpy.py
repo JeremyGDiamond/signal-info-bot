@@ -66,8 +66,8 @@ class SignalObj:
 
     def __init__(self, configFileName, logFileName):
         loggerConfig(logFileName)
-        logging.info("starting process: \"cat config.json\"")
-        self.proc = process(["cat","config.json"]) # to set the type
+        logging.info("starting process: \"cat config.json5\"")
+        self.proc = process(["cat","config.json5"]) # to set the type
         self.recv = ""
         self.recv = wholeRecv(self.proc, self.recv)
         # print(self.recv)

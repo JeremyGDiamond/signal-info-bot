@@ -5,8 +5,8 @@ Welcome and info bot for signal groups based on [signal cli](https://github.com/
 ## Setup
 
 Setup your config file
-   - make a copy of exampleConfig.json and rename it to config.json
-   - modify config.json to meet the needs of your group (use signal-cli commands to get group id numbers and uids)
+   - make a copy of exampleconfig.json5 and rename it to config.json5
+   - modify config.json5 to meet the needs of your group (use signal-cli commands to get group id numbers and uids)
    - repeat the above with testConfig.py
 
 
