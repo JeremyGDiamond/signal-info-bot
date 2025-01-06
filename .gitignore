@@ -3,8 +3,8 @@ __pycache__
 
 config.json
 testConfig.json
-
-testcommands.txt
+config.json5
+testConfig.json5
 
 debug.log
 testsDebug.log
