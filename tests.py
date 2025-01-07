@@ -13,7 +13,7 @@ logging.basicConfig(
     ]
 )
 
-signal = signalpy.SignalObj("testconfig.json5", "testsDebug.log")
+signal = signalpy.SignalObj("testConfig.json5", "testsDebug.log")
 
 def passedTestPrint(name):
     logging.info(f"TEST:{name} PASSED")
