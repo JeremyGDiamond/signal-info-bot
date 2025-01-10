@@ -2,7 +2,10 @@
 	build
 
 run:build
-	docker run --name signalInfoBotContainer -v .:/code signal-info-bot:latest
+	docker run --name signalInfoBotContainer -v .:/code \
+	--mount source=signalR,target=/root \
+	--mount source=signalT,target=/tmp \
+	signal-info-bot:latest
 
 build:remove
 	docker build -t signal-info-bot:latest .
@@ -18,10 +21,17 @@ clean:remove
 	docker rmi signal-info-bot
 
 runNew:buildNew
-	docker run --name signalInfoBotContainer -v .:/code signal-info-bot:latest
+	docker run --name signalInfoBotContainer -v .:/code \
+	--mount source=signalR,target=/root \
+	--mount source=signalT,target=/tmp \
+	signal-info-bot:latest
 
-buildNew:
+buildNew:volumeNew
 	docker build -t signal-info-bot:latest .
 
 stop:
 	docker stop signalInfoBotContainer
+
+volumeNew:
+	docker volume create signalR
+	docker volume create signalT
