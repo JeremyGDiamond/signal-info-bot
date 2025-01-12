@@ -12,12 +12,12 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
     handlers=[
-        logging.FileHandler("debug.log"),
+        logging.FileHandler("debug2.log"),
         logging.StreamHandler()
     ]
 )
 
-signal = signalpy.SignalObj("config.json", "debug.log")
+signal = signalpy.SignalObj("config.json", "debug2.log")
 
 def main():
     logging.info("Bot alive")
@@ -41,7 +41,7 @@ def main():
         # try:
         #     if datetime.datetime.now() >= tom:
         #         yest = "yest.log"
-        #         current = "debug.log"
+        #         current = "debug2.log"
         #         if os.path.isfile(yest):
         #             os.remove(yest)
 

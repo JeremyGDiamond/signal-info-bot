@@ -8,12 +8,12 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
     handlers=[
-        logging.FileHandler("testsDebug.log"),
+        logging.FileHandler("testsdebug2.log"),
         logging.StreamHandler()
     ]
 )
 
-signal = signalpy.SignalObj("testConfig.json", "testsDebug.log")
+signal = signalpy.SignalObj("testConfig.json", "testsdebug2.log")
 
 def passedTestPrint(name):
     logging.info(f"TEST:{name} PASSED")
