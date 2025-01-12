@@ -4,7 +4,8 @@
 run:build
 	docker run --name signalInfoBotContainer -v .:/code \
 	--mount source=signalR,target=/root \
-	--mount source=signalT,target=/tmp \
+	--mount source=/home/j/Documents/signal/localTmp,target=/tmp \
+	--user : \
 	signal-info-bot:latest
 
 build:remove
@@ -23,7 +24,8 @@ clean:remove
 runNew:buildNew
 	docker run --name signalInfoBotContainer -v .:/code \
 	--mount source=signalR,target=/root \
-	--mount source=signalT,target=/tmp \
+	--mount type=bind,source=./localTmp,target=/tmp \
+	--user : \
 	signal-info-bot:latest
 
 buildNew:volumeNew
@@ -34,4 +36,4 @@ stop:
 
 volumeNew:
 	docker volume create signalR
-	docker volume create signalT
+	# docker volume create signalT
