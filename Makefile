@@ -5,7 +5,7 @@ run:build
 	docker run --name signalInfoBotContainer -v .:/code \
 	--mount source=signalR,target=/root \
 	--mount source=/home/j/Documents/signal/localTmp,target=/tmp \
-	--user : \
+	--user $$(id -u):$$(id -g) \
 	signal-info-bot:latest
 
 build:remove
@@ -25,7 +25,7 @@ runNew:buildNew
 	docker run --name signalInfoBotContainer -v .:/code \
 	--mount source=signalR,target=/root \
 	--mount type=bind,source=./localTmp,target=/tmp \
-	--user : \
+	--user $$(id -u):$$(id -g) \
 	signal-info-bot:latest
 
 buildNew:volumeNew
