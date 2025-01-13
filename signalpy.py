@@ -101,7 +101,6 @@ class SignalObj:
             os.remove(self.config["socketFile"])
         logging.info("double killing process: self.proc")
         self.proc.kill()
-        time.sleep(0.3)
         time.sleep(5)
 
     def startServer(self):
