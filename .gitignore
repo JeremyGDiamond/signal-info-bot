@@ -4,13 +4,6 @@ __pycache__
 config.json
 testConfig.json
 
-testcommands.txt
-
-debug.log
-debug2.log
-testsDebug.log
-signalpyDebug.log
-yest.log
-
+*.log
 /localTmp
 /?

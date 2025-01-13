@@ -137,11 +137,11 @@ class SignalObj:
         except:
             logging.error("can't close client")
         time.sleep(5)
-        self.proc.kill()
+        self.proc.proc.terminate()
         while(self.proc.proc.returncode == None):
             logging.info("waiting to proc to finish: " + str(self.proc.proc.returncode))
             time.sleep(0.1)
-
+        self.proc.kill()
         try:
             os.remove(self.config["socketFile"])
         except:
@@ -278,11 +278,11 @@ class SignalObj:
         output = wholeRecv(proc, output)
         self.groupsTimeStamp = time.time()
         logging.info("killing process: \"signal-cli listGroups -d\"")
+        proc.proc.terminate()
+        # while(proc.proc.returncode == None):
+        #     logging.info("waiting to proc to finish: " + str(proc.proc.returncode))
+        #     time.sleep(0.1)
         proc.kill()
-        while(proc.proc.returncode == None):
-            logging.info("waiting to proc to finish: " + str(proc.proc.returncode))
-            time.sleep(0.1)
-
         self.startServer()
 
         return (output)
