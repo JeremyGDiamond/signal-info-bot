@@ -29,3 +29,4 @@ buildNew:
 
 stop:
 	docker stop signalInfoBotContainer
+
