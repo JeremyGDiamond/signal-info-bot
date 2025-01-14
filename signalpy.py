@@ -101,9 +101,6 @@ class SignalObj:
             os.remove(self.config["socketFile"])
         logging.info("double killing process: self.proc")
         self.proc.kill()
-        while(self.proc.proc.returncode == None):
-            logging.info("waiting to proc to finish: " + str(self.proc.proc.returncode))
-            time.sleep(0.1)
         time.sleep(5)
 
     def startServer(self):
@@ -137,11 +134,9 @@ class SignalObj:
         except:
             logging.error("can't close client")
         time.sleep(5)
+        self.proc.proc.terminate()
+        time.sleep(0.3)
         self.proc.kill()
-        while(self.proc.proc.returncode == None):
-            logging.info("waiting to proc to finish: " + str(self.proc.proc.returncode))
-            time.sleep(0.1)
-
         try:
             os.remove(self.config["socketFile"])
         except:
@@ -278,11 +273,9 @@ class SignalObj:
         output = wholeRecv(proc, output)
         self.groupsTimeStamp = time.time()
         logging.info("killing process: \"signal-cli listGroups -d\"")
+        proc.proc.terminate()
+        time.sleep(0.3)
         proc.kill()
-        while(proc.proc.returncode == None):
-            logging.info("waiting to proc to finish: " + str(proc.proc.returncode))
-            time.sleep(0.1)
-
         self.startServer()
 
         return (output)
