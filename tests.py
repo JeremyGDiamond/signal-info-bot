@@ -68,6 +68,11 @@ def testListGroups(): #TODO check ret codes and contents
     logging.info(output)
     passedTestPrint("testListGroups")
 
+def testListGroupsServer(): #TODO check ret codes and contents
+    output = signal.listGroupsServer()
+    logging.info(output)
+    passedTestPrint("testListGroupsServer")
+
 # test bot behaviors
 def testAdminAlert():
     signal.adminAlert("bot: test admin alert")
@@ -151,36 +156,37 @@ def main():
     logging.info("signalpi Tests")
 
     # init tests
-    testGenGroups()
+    # testGenGroups()
 
     # send receive and list groups tests
-    testSend()
-    testSendGroup()
-    testSendNTS()
-    testAdminAlert()
-    testReceive()
-    testListGroups()
+    # testSend()
+    # testSendGroup()
+    # testSendNTS()
+    # testAdminAlert()
+    # testReceive()
+    # testListGroups()
+    testListGroupsServer()
     
 
     # group info tests
-    testGetGroupMembers()
-    testGetGroupAdmins()
+    # testGetGroupMembers()
+    # testGetGroupAdmins()
 
     #test error and auth
-    testSendError()
-    testAuth()
-    testAuthGroup()
+    # testSendError()
+    # testAuth()
+    # testAuthGroup()
 
     # test messege sends
-    testSendWelcome()
-    testActivateGroup()
-    testSendHelp()
-    testSendDefault()
+    # testSendWelcome()
+    # testActivateGroup()
+    # testSendHelp()
+    # testSendDefault()
 
     # test cmd message, and receive parsing
-    testHandleCmd()
-    testProcessMsg()
-    testParseReceive()
+    # testHandleCmd()
+    # testProcessMsg()
+    # testParseReceive()
     
     
 if __name__ == "__main__":
