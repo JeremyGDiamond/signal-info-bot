@@ -29,9 +29,10 @@ def testReadConfig(): #TODO alpha use exmapleConfig.json
 def testGenGroups(): #TODO alpha
     signal.receive()
     logging.info(f"Add someone to the test group now to test new member welcome messages")
-    time.sleep(60 * 2) #change active refresh to make this work
+    # time.sleep(60 * 2) #change active refresh to make this work
     signal.receive()
     signal.genGroups()
+    # print(signal.groups)
     passedTestPrint("testGenGroups")
 
 def testValidateConfigGroups(): #TODO alpha use exmapleConfig.json
@@ -67,11 +68,6 @@ def testListGroups(): #TODO check ret codes and contents
     output = signal.listGroups()
     logging.info(output)
     passedTestPrint("testListGroups")
-
-def testListGroupsServer(): #TODO check ret codes and contents
-    output = signal.listGroupsServer()
-    logging.info(output)
-    passedTestPrint("testListGroupsServer")
 
 # test bot behaviors
 def testAdminAlert():
@@ -155,38 +151,37 @@ def main():
     
     logging.info("signalpi Tests")
 
-    # init tests
+    # # init tests
     # testGenGroups()
 
-    # send receive and list groups tests
+    # # send receive and list groups tests
     # testSend()
     # testSendGroup()
     # testSendNTS()
     # testAdminAlert()
     # testReceive()
     # testListGroups()
-    testListGroupsServer()
     
 
-    # group info tests
+    # # group info tests
     # testGetGroupMembers()
     # testGetGroupAdmins()
 
-    #test error and auth
+    # # test error and auth
     # testSendError()
     # testAuth()
     # testAuthGroup()
 
-    # test messege sends
+    # # test messege sends
     # testSendWelcome()
     # testActivateGroup()
     # testSendHelp()
     # testSendDefault()
 
-    # test cmd message, and receive parsing
+    # # test cmd message, and receive parsing
     # testHandleCmd()
-    # testProcessMsg()
-    # testParseReceive()
+    testProcessMsg()
+    testParseReceive()
     
     
 if __name__ == "__main__":
