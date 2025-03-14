@@ -230,21 +230,6 @@ class SignalObj:
         
         return (output)
 
-    # def listGroups(self):
-    #     self.killServer()
-    #     logging.info("starting process: \"signal-cli listGroups -d\"")
-    #     proc = process(["signal-cli", "listGroups", "-d"])
-    #     output = ""
-    #     output = wholeRecv(proc, output)
-    #     self.groupsTimeStamp = time.time()
-    #     logging.info("killing process: \"signal-cli listGroups -d\"")
-    #     proc.proc.terminate()
-    #     time.sleep(0.3)
-    #     proc.kill()
-    #     self.startServer()
-
-    #     return (output)
-
     def listGroups(self):
         jsonrpc = {"jsonrpc":"2.0","method":"listGroups","id":"1"} 
         whatImSending = json.dumps(jsonrpc) + "\n"
@@ -252,14 +237,17 @@ class SignalObj:
         client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         client.connect(self.socket_path)
         self.client = client
-
-        # try:
             
         # Send a message to the server
-        self.client.sendall(whatImSending.encode())
-        newGroups = self.client.recv(4096).decode("utf-8")
-        newGroups = json.loads(newGroups)
-
+        newGroupsrecv = None
+        try:
+            self.client.sendall(whatImSending.encode())
+            newGroupsrecv = self.client.recv(4096).decode("utf-8")
+            newGroups = json.loads(newGroupsrecv)
+        except:
+            logging.error("listGroups: newgroups recv error")
+            print(newGroupsrecv)
+            newGroups = None
         # print("These are the new groups",newGroups)
             
         # except:
@@ -315,81 +303,6 @@ class SignalObj:
                 configGroups[grId]["commands"] = {}
                 logging.warning(f"no commands set for group \"{grName}\" id={grId}")
 
-    # def genGroups(self):
-    #     """
-    #     Retrieves name, members and admins for each group the bot has access to.
-    #     NOTE: group names are stored lower case.
-    #     TODO discuss: how to deal with duplicate group names
-    #     TODO discuss: how to deal with groups bot has lost access to
-    #     """
-    #     # Return if not time for active refresh.
-    #     # if time.time() - self.groupsTimeStamp < ACTIVE_REFRESH:
-    #     #     return
-
-    #     res = self.listGroups()
-    #     res_groups = res.split("Id: ")
-
-    #     group_re = r"(.+) Name: (.+) Description: (.|\n)* Active: (true|false) .+ Members: (\[.*\]) Pending members: .+ Admins: (\[.*\]) Banned: "
-    #     new_groups = {}
-    #     welcomes = {}
-    #     for res_group in res_groups:
-            
-    #         if res_group.strip() == "": continue
-
-    #         re_res = re.search(group_re, res_group)
-    #         if re_res is None:
-    #             logging.warning(f"could not parse group \"{res_group}\"")
-    #             continue
-    #         grId, name, _, active, members, admins = re_res.groups()
-    #         # Only process groups that are in config
-    #         if grId not in self.config["groups"].keys():
-    #             continue
-
-    #         # Deal with inactive groups
-    #         if active == "false":
-    #             # TODO COMMMENT OUT THE FOLLOWING LINE WHEN TESTING WITH PERSONAL ACCOUNT
-    #             self.activateGroup(userid, grId) #TODO uncomment when running for real
-    #             continue
-
-    #         # Skip invalid groups
-    #         if members == "[]": continue
-    #         if name == "null": continue
-
-    #         name = name.lower().strip()
-    #         members = members[1:-1].split(", ")
-    #         admins = admins[1:-1].split(", ")
-
-    #         if name in new_groups.keys():
-    #             logging.error(f"bot has access to multiple groups with name={name}")
-    #             continue
-    #             # TODO: how to handle this, now only the first group is handled.
-    #         new_members = {}
-    #         if grId in self.groups.keys():
-    #             # Send welcome message to new members
-    #             new_members = set(members) - set(self.groups[grId]["members"])
-    #             welcomes[grId] = new_members
-                
-    #         new_groups[grId] = {
-    #             "name": name,
-    #             "members": members,
-    #             "admins": admins,
-    #         }
-
-    #     # Check if bot has lost access to groups.
-    #     accessLostGrIds = set(self.groups.keys()) - set(new_groups.keys())
-    #     for grId in accessLostGrIds:
-    #         grName = self.groups[grId]["name"]
-    #         logging.info(f"bot has lost access to group {grName} with id={grId}")
-
-    #     self.groups = new_groups
-
-    #     for grId, new_members in welcomes.items():
-    #         if self.config["groups"][grId]["welcomeMessage"] != "":
-    #             for new_member in new_members:
-    #                 self.sendWelcome(new_member, grId)
-    #         else:
-    #             logging.info(f"did not send {len(new_members)} welcome message for group {name} with id={grId} because welcome message is empty")
-
 
     def genGroups(self):
         """
@@ -403,75 +316,77 @@ class SignalObj:
             return
 
         res = self.listGroups()
-        
-        new_groups = {}
-        welcomes = {}
-        for res_group in res["result"]:
+
+        if(res != None):
             
-            
-            grId = res_group["id"] 
-            name = res_group["name"]
-            members = res_group["members"] 
-            admins = res_group["admins"]
-            # Only process groups that are in config
-            if grId not in self.config["groups"].keys():
-                continue
-
-            # Deal with inactive groups COOP How do we do this now?
-            # if active == "false":
-            #     # TODO COMMMENT OUT THE FOLLOWING LINE WHEN TESTING WITH PERSONAL ACCOUNT
-            #     self.activateGroup(userid, grId) #TODO uncomment when running for real
-            #     continue
-
-            # Skip invalid groups
-            if members == "[]": continue
-            if name == "null": continue
-
-            name = name.lower().strip()
-            # members = members[1:-1].split(", ")
-            for x in range(len(members)):
-                if members[x]['number'] != None:
-                    members[x] = members[x]['number']
-                else:
-                    members[x] = members[x]['uuid']
-
-            # admins = admins[1:-1].split(", ")
-            for x in range(len(admins)):
-                if admins[x]['number'] != None:
-                    admins[x] = admins[x]['number']
-                else:
-                    admins[x] = admins[x]['uuid']
-
-            if name in new_groups.keys():
-                logging.error(f"bot has access to multiple groups with name={name}")
-                continue
-                # TODO: how to handle this, now only the first group is handled.
-            new_members = {}
-            if grId in self.groups.keys():
-                # Send welcome message to new members
-                new_members = set(members) - set(self.groups[grId]["members"])
-                welcomes[grId] = new_members
+            new_groups = {}
+            welcomes = {}
+            for res_group in res["result"]:
                 
-            new_groups[grId] = {
-                "name": name,
-                "members": members,
-                "admins": admins,
-            }
+                
+                grId = res_group["id"] 
+                name = res_group["name"]
+                members = res_group["members"] 
+                admins = res_group["admins"]
+                # Only process groups that are in config
+                if grId not in self.config["groups"].keys():
+                    continue
 
-        # Check if bot has lost access to groups.
-        accessLostGrIds = set(self.groups.keys()) - set(new_groups.keys())
-        for grId in accessLostGrIds:
-            grName = self.groups[grId]["name"]
-            logging.info(f"bot has lost access to group {grName} with id={grId}")
+                # Deal with inactive groups COOP How do we do this now?
+                # if active == "false":
+                #     # TODO COMMMENT OUT THE FOLLOWING LINE WHEN TESTING WITH PERSONAL ACCOUNT
+                #     self.activateGroup(userid, grId) #TODO uncomment when running for real
+                #     continue
 
-        self.groups = new_groups
+                # Skip invalid groups
+                if members == "[]": continue
+                if name == "null": continue
 
-        for grId, new_members in welcomes.items():
-            if self.config["groups"][grId]["welcomeMessage"] != "":
-                for new_member in new_members:
-                    self.sendWelcome(new_member, grId)
-            else:
-                logging.info(f"did not send {len(new_members)} welcome message for group {name} with id={grId} because welcome message is empty")
+                name = name.lower().strip()
+                # members = members[1:-1].split(", ")
+                for x in range(len(members)):
+                    if members[x]['number'] != None:
+                        members[x] = members[x]['number']
+                    else:
+                        members[x] = members[x]['uuid']
+
+                # admins = admins[1:-1].split(", ")
+                for x in range(len(admins)):
+                    if admins[x]['number'] != None:
+                        admins[x] = admins[x]['number']
+                    else:
+                        admins[x] = admins[x]['uuid']
+
+                if name in new_groups.keys():
+                    logging.error(f"bot has access to multiple groups with name={name}")
+                    continue
+                    # TODO: how to handle this, now only the first group is handled.
+                new_members = {}
+                if grId in self.groups.keys():
+                    # Send welcome message to new members
+                    new_members = set(members) - set(self.groups[grId]["members"])
+                    welcomes[grId] = new_members
+                    
+                new_groups[grId] = {
+                    "name": name,
+                    "members": members,
+                    "admins": admins,
+                }
+
+            # Check if bot has lost access to groups.
+            accessLostGrIds = set(self.groups.keys()) - set(new_groups.keys())
+            for grId in accessLostGrIds:
+                grName = self.groups[grId]["name"]
+                logging.info(f"bot has lost access to group {grName} with id={grId}")
+
+            self.groups = new_groups
+
+            for grId, new_members in welcomes.items():
+                if self.config["groups"][grId]["welcomeMessage"] != "":
+                    for new_member in new_members:
+                        self.sendWelcome(new_member, grId)
+                else:
+                    logging.info(f"did not send {len(new_members)} welcome message for group {name} with id={grId} because welcome message is empty")
 
     
     def genHelps(self):
